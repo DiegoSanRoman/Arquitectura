@@ -9,9 +9,9 @@
 int main() {
   // Crear una imagen de prueba en formato SOA
   ImageSOA testImage;
-  testImage.red_channel = {255, 255, 0, 0, 0, 0, 255, 255, 255};
+  testImage.red_channel = {255, 255, 0, 255, 0, 0, 255, 255, 255};
   testImage.green_channel = {0, 0, 255, 255, 0, 0, 255, 255, 0};
-  testImage.blue_channel = {0, 0, 0, 0, 255, 255, 0, 0, 255};
+  testImage.blue_channel = {255, 0, 0, 0, 255, 255, 0, 0, 255};
 
   // Imprimir la imagen original
   std::cout << "Imagen original:" << std::endl;
