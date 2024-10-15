@@ -1,18 +1,37 @@
 //
 // Created by alba on 9/10/24.
 //
-
 #ifndef CUTFREQ_HPP
 #define CUTFREQ_HPP
 
 #include <vector>
+#include <unordered_map>
+#include <cstddef>
 
-// Definir la estructura Pixel si no está definida en otro lugar
-struct Pixel {
-  int r, g, b;
-};
+namespace imgaos {
 
-// Declaración de la función cutfreq
-void cutfreq(std::vector<Pixel>& image, int n);
+  struct Color {
+    int r;
+    int g;
+    int b;
 
-#endif
+    bool operator==(const Color& other) const {
+      return r == other.r && g == other.g && b == other.b;
+    }
+  };
+
+  struct ColorHash {
+    std::size_t operator()(const Color& color) const {
+      return std::hash<int>()(color.r) ^ (std::hash<int>()(color.g) << 1) ^ (std::hash<int>()(color.b) << 2);
+    }
+  };
+
+  struct ImageAOS {
+    std::vector<Color> pixels;
+  };
+
+  void cutfreq(ImageAOS& image, int n);
+
+} // namespace imgaos
+
+#endif // CUTFREQ_HPP
