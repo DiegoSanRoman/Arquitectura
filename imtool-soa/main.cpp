@@ -1,33 +1,36 @@
 //
 // Created by diego-san-roman on 7/10/24.
 //
-
 #include <iostream>
-#include <vector>
-#include "../imgsoa/cutfreq.hpp" // Asegúrate de tener las declaraciones correctas en este archivo
+#include <common/progargs.hpp>
+#include <imgsoa/imagesoa.hpp>  // Include específico para SOA
 
-int main() {
-  // Crear una imagen de prueba en formato SOA
-  ImageSOA testImage;
-  testImage.red_channel = {255, 255, 0, 255, 0, 0, 255, 255, 255};
-  testImage.green_channel = {0, 0, 255, 255, 0, 0, 255, 255, 0};
-  testImage.blue_channel = {255, 0, 0, 0, 255, 255, 0, 0, 255};
+int main(int argc, char* argv[]) {
+  try {
+    auto args = common::ProgramArguments::parse(argc, argv);
 
-  // Imprimir la imagen original
-  std::cout << "Imagen original:" << std::endl;
-  for (size_t i = 0; i < testImage.red_channel.size(); ++i) {
-    std::cout << "R: " << testImage.red_channel[i] << ", G: " << testImage.green_channel[i] << ", B: " << testImage.blue_channel[i] << std::endl;
+    switch (args.get_operation()) {
+      case common::ProgramArguments::Operation::MaxLevel: {
+        // Crear y procesar imagen usando la implementación SOA
+        imgsoa::ImageSOA image;
+        image.load(args.get_input_file());
+        image.scale_intensity(args.get_maxlevel());
+        image.save(args.get_output_file());
+        break;
+      }
+      // Otros casos...
+      default:
+        throw common::ArgumentError("Operation not implemented");
+    }
+
+    return 0;
   }
-
-  // Aplicar cutfreq
-  int n = 1; // Queremos eliminar 1 color
-  cutfreq(testImage, n);
-
-  // Imprimir la imagen después de cutfreq
-  std::cout << "\nImagen después de cutfreq:" << std::endl;
-  for (size_t i = 0; i < testImage.red_channel.size(); ++i) {
-    std::cout << "R: " << testImage.red_channel[i] << ", G: " << testImage.green_channel[i] << ", B: " << testImage.blue_channel[i] << std::endl;
+  catch (const common::ArgumentError& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return -1;
   }
-
-  return 0;
+  catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return -1;
+  }
 }
