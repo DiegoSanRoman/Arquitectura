@@ -2,13 +2,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "../imgaos/maxlevel.hpp" // Incluir el archivo de cabecera
 
 int main(int argc, char* argv[]) {
-  // Definir constantes para evitar números mágicos
   const int MIN_ARGS = 3;
   const int EXPECTED_ARGS_MAXLEVEL = 5;
 
-  // Convertir los argumentos de línea de comandos a std::vector<std::string>
   std::vector<std::string> args(argv, argv + argc);
 
   if (argc < MIN_ARGS) {
@@ -16,7 +15,6 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  // Acceder al cuarto argumento desde el vector
   const std::string operation = args[3];
   if (operation == "maxlevel") {
     if (argc != EXPECTED_ARGS_MAXLEVEL) {
@@ -26,8 +24,6 @@ int main(int argc, char* argv[]) {
 
     try {
       const int MAX_COLOR_VALUE = 65535;
-
-      // Acceder al cuarto argumento desde el vector
       const int newMaxValue = std::stoi(args[4]);
 
       if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
@@ -36,6 +32,7 @@ int main(int argc, char* argv[]) {
       }
 
       std::cout << "Now we will do a maxlevel operation" << "\n";
+      performMaxLevelOperation(newMaxValue); // Llamar a la función
 
     } catch (const std::invalid_argument& e) {
       std::cerr << "Error: Argumento inválido para el nivel máximo.\n";

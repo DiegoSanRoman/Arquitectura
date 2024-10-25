@@ -1,6 +1,7 @@
 //
 // Created by alba on 9/10/24.
 //
+/*
 #include "cutfreq.hpp"
 #include <iostream>
 #include <map>
@@ -122,3 +123,4 @@ void cutfreq(ImageSOA& image, int n) {
     }
   }
 }
+*/
