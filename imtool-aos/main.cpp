@@ -1,77 +1,50 @@
 #include <iostream>
+#include <stdexcept>
 #include <string>
-#include <imgaos/imageaos.hpp>  // Asegúrate de que esta ruta sea correcta
-
-const int MAX_INTENSITY = 65535; // Valor máximo de intensidad
-const int REQUIRED_ARGS_MAXLEVEL = 4; // Número de argumentos requeridos para maxlevel
-const int REQUIRED_ARGS_RESIZE = 5; // Número de argumentos requeridos para resize
-const int REQUIRED_ARGS_CUTFREQ = 4; // Número de argumentos requeridos para cutfreq
-const int REQUIRED_ARGS_COMPRESS = 3; // Número de argumentos requeridos para compress
+#include <vector>
 
 int main(int argc, char* argv[]) {
-    // Verifica el número de argumentos
-    if (argc < 3) {
-        std::cerr << "Error: Not enough arguments." << std::endl;
-        return -1;
-    }
+  // Definir constantes para evitar números mágicos
+  const int MIN_ARGS = 3;
+  const int EXPECTED_ARGS_MAXLEVEL = 5;
 
-    std::string operation = argv[3];  // Evitar advertencias de aritmética de punteros
+  // Convertir los argumentos de línea de comandos a std::vector<std::string>
+  std::vector<std::string> args(argv, argv + argc);
 
-    if (operation == "maxlevel") {
-        if (argc != REQUIRED_ARGS_MAXLEVEL) {
-            std::cerr << "Error: Invalid number of extra arguments for maxlevel: " << argc - REQUIRED_ARGS_MAXLEVEL << std::endl;
-            return -1;
-        }
-
-        int newMaxValue = std::stoi(argv[4]); // Convertir el argumento a un entero
-        if (newMaxValue < 0 || newMaxValue > MAX_INTENSITY) {
-            std::cerr << "Error: newMaxValue must be between 0 and " << MAX_INTENSITY << "." << std::endl;
-            return -1;
-        }
-
-        // Lógica para maxlevel
-        std::cout << "Executing maxlevel with newMaxValue: " << newMaxValue << std::endl;
-        // Aquí deberías llamar a la función que maneje la operación de maxlevel
-
-        return 0; // Salida exitosa después de la operación
-    }
-
-    if (operation == "resize") {
-        if (argc != REQUIRED_ARGS_RESIZE) {
-            std::cerr << "Error: Invalid number of extra arguments for resize: " << argc - REQUIRED_ARGS_RESIZE << std::endl;
-            return -1;
-        }
-        // Lógica para resize
-        std::cout << "Executing resize" << std::endl;
-        // Aquí deberías llamar a la función que maneje la operación de resize
-
-        return 0; // Salida exitosa después de la operación
-    }
-
-    if (operation == "cutfreq") {
-        if (argc != REQUIRED_ARGS_CUTFREQ) {
-            std::cerr << "Error: Invalid number of extra arguments for cutfreq: " << argc - REQUIRED_ARGS_CUTFREQ << std::endl;
-            return -1;
-        }
-        // Lógica para cutfreq
-        std::cout << "Executing cutfreq" << std::endl;
-        // Aquí deberías llamar a la función que maneje la operación de cutfreq
-
-        return 0; // Salida exitosa después de la operación
-    }
-
-    if (operation == "compress") {
-        if (argc != REQUIRED_ARGS_COMPRESS) {
-            std::cerr << "Error: Invalid number of extra arguments for compress: " << argc - REQUIRED_ARGS_COMPRESS << std::endl;
-            return -1;
-        }
-        // Lógica para compress
-        std::cout << "Executing compress" << std::endl;
-        // Aquí deberías llamar a la función que maneje la operación de compress
-
-        return 0; // Salida exitosa después de la operación
-    }
-
-    std::cerr << "Error: Unknown operation: " << operation << std::endl;
+  if (argc < MIN_ARGS) {
+    std::cerr << "Error: Se requieren al menos " << MIN_ARGS << " argumentos.\n";
     return -1;
+  }
+
+  // Acceder al cuarto argumento desde el vector
+  const std::string operation = args[3];
+  if (operation == "maxlevel") {
+    if (argc != EXPECTED_ARGS_MAXLEVEL) {
+      std::cerr << "Error: El número de argumentos para maxlevel debe ser exactamente " << EXPECTED_ARGS_MAXLEVEL << ".\n";
+      return -1;
+    }
+
+    try {
+      const int MAX_COLOR_VALUE = 65535;
+
+      // Acceder al cuarto argumento desde el vector
+      const int newMaxValue = std::stoi(args[4]);
+
+      if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
+        std::cerr << "Error: El nivel máximo debe estar entre 0 y " << MAX_COLOR_VALUE << ".\n";
+        return -1;
+      }
+
+      std::cout << "Now we will do a maxlevel operation" << "\n";
+
+    } catch (const std::invalid_argument& e) {
+      std::cerr << "Error: Argumento inválido para el nivel máximo.\n";
+      return -1;
+    }
+  } else {
+    std::cerr << "Error: Operación no válida.\n";
+    return -1;
+  }
+
+  return 0;
 }
