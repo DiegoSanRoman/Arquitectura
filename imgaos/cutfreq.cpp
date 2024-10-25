@@ -11,6 +11,7 @@
 #include <limits>
 
 namespace {
+
 std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImage& image) {
     std::unordered_map<uint32_t, int> colorFrequency;
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
@@ -28,7 +29,13 @@ std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uin
         if (colorA.second != colorB.second) {
             return colorA.second < colorB.second;
         }
-        return colorA.first > colorB.first;
+        if ((colorA.first & MASK) != (colorB.first & MASK)) {
+            return (colorA.first & MASK) > (colorB.first & MASK);
+        }
+        if (((colorA.first >> SHIFT_GREEN) & MASK) != ((colorB.first >> SHIFT_GREEN) & MASK)) {
+            return ((colorA.first >> SHIFT_GREEN) & MASK) > ((colorB.first >> SHIFT_GREEN) & MASK);
+        }
+        return ((colorA.first >> SHIFT_RED) & MASK) > ((colorB.first >> SHIFT_RED) & MASK);
     });
 
     std::vector<uint32_t> colorsToRemove;
@@ -77,9 +84,10 @@ void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint3
         }
     }
 }
-}
 
-  void cutfreq(PPMImage& image, int n) {
+} // namespace
+
+void cutfreq(PPMImage& image, int n) {
     auto colorFrequency = calcularFrecuenciaColores(image);
     auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);
 
@@ -88,11 +96,17 @@ void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint3
         if (colorA.second != colorB.second) {
             return colorA.second < colorB.second;
         }
-        return colorA.first > colorB.first;
+        if ((colorA.first & MASK) != (colorB.first & MASK)) {
+            return (colorA.first & MASK) > (colorB.first & MASK);
+        }
+        if (((colorA.first >> SHIFT_GREEN) & MASK) != ((colorB.first >> SHIFT_GREEN) & MASK)) {
+            return ((colorA.first >> SHIFT_GREEN) & MASK) > ((colorB.first >> SHIFT_GREEN) & MASK);
+        }
+        return ((colorA.first >> SHIFT_RED) & MASK) > ((colorB.first >> SHIFT_RED) & MASK);
     });
 
     const std::unordered_set<uint32_t> colorsToRemoveSet(colorsToRemove.begin(), colorsToRemove.end());
     auto replacementMap = encontrarColoresReemplazo(frequencyList, colorsToRemoveSet);
 
     reemplazarColores(image, replacementMap);
-  }
+}

@@ -100,6 +100,10 @@ int main(int argc, char* argv[]) {
         return -1;
       }
       ejecutarCutfreq(image, number);
+      if (!escribirImagenPPM(args.getOutputFile(), image)) {
+        std::cerr << "Error al escribir la imagen de salida.\n";
+        return -1;
+      }
     }
     else {
       throw std::invalid_argument("Operación no válida");

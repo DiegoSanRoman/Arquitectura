@@ -45,30 +45,30 @@ bool leerImagenPPM(const std::string& filePath, PPMImage& image) {
 }
 
 bool escribirImagenPPM(const std::string& filePath, const PPMImage& image) {
-    try {
-        std::ofstream file(filePath, std::ios::binary);
-        if (!file) {
-            std::cerr << "Error al abrir el archivo para escritura: " << filePath << '\n';
-            return false;
-        }
-
-        // Escribir el encabezado
-        file << "P6\n" << image.width << " " << image.height << "\n" << image.maxValue << "\n";
-
-        // Calcular el tamaño total de bytes
-        const std::size_t totalBytes = static_cast<std::size_t>(image.width) *
-                                     static_cast<std::size_t>(image.height) * 3;
-
-        // Escribir los datos de píxeles
-        if (!file.write(std::bit_cast<const char*>(image.pixelData.data()),
-                       static_cast<std::streamsize>(totalBytes))) {
-            std::cerr << "Error al escribir los datos de la imagen.\n";
-            return false;
-        }
-
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Error al escribir imagen PPM: " << e.what() << '\n';
-        return false;
+  try {
+    std::ofstream file(filePath, std::ios::binary);
+    if (!file) {
+      std::cerr << "Error al abrir el archivo para escritura: " << filePath << '\n';
+      return false;
     }
+
+    // Escribir el encabezado
+    file << "P6\n" << image.width << " " << image.height << "\n" << image.maxValue << "\n";
+
+    // Calcular el tamaño total de bytes
+    const std::size_t totalBytes = static_cast<std::size_t>(image.width) *
+                                 static_cast<std::size_t>(image.height) * 3;
+
+    // Escribir los datos de píxeles
+    if (!file.write(std::bit_cast<const char*>(image.pixelData.data()),
+                   static_cast<std::streamsize>(totalBytes))) {
+      std::cerr << "Error al escribir los datos de la imagen.\n";
+      return false;
+                   }
+
+    return true;
+  } catch (const std::exception& e) {
+    std::cerr << "Error al escribir imagen PPM: " << e.what() << '\n';
+    return false;
+  }
 }
