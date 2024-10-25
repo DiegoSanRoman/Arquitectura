@@ -6,6 +6,7 @@
 #include <cmath>
 #include <exception>
 #include <cstddef>
+#include <algorithm> // Para std::min
 
 namespace {
     constexpr int BITS_PER_BYTE = 8;
@@ -27,7 +28,7 @@ namespace {
     }
 
     unsigned int readColorComponent(const std::vector<unsigned char>& pixelData,
-                                  std::size_t index, bool is16Bit) {
+                                     std::size_t index, bool is16Bit) {
         if (is16Bit) {
             const std::size_t idx = index * 2;
             return (static_cast<unsigned int>(pixelData[idx]) << BITS_PER_BYTE) |
@@ -37,7 +38,7 @@ namespace {
     }
 
     void writeColorComponent(std::vector<unsigned char>& pixelData,
-                           std::size_t index, unsigned int value, bool is16Bit) {
+                             std::size_t index, unsigned int value, bool is16Bit) {
         if (is16Bit) {
             const std::size_t idx = index * 2;
             pixelData[idx] = static_cast<unsigned char>(value >> BITS_PER_BYTE);
@@ -53,29 +54,37 @@ namespace {
             inputImage.maxValue > MAX_COLOR_8BIT,
             newMaxValue > MAX_COLOR_8BIT,
             static_cast<std::size_t>(inputImage.width) *
-            static_cast<std::size_t>(inputImage.height) * 3
+            static_cast<std::size_t>(inputImage.height) * 3 // Total de componentes para 3 canales RGB
         };
     }
 
     void processPixelData(const PPMImage& inputImage, PPMImage& outputImage,
-                         const PixelProcessingParams& params) {
+                          const PixelProcessingParams& params) {
         const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2 : 1;
         const std::size_t outputTotalBytes = params.totalComponents * outputBytesPerComponent;
 
         outputImage.pixelData.resize(outputTotalBytes);
 
         for (std::size_t i = 0; i < params.totalComponents; ++i) {
-            const unsigned int inputValue = readColorComponent(
-                inputImage.pixelData, i, params.inputIs16Bit);
-            const auto outputValue = static_cast<unsigned int>(
+            const unsigned int inputValue = readColorComponent(inputImage.pixelData, i, params.inputIs16Bit);
+            // Escalar el valor del píxel
+            auto outputValue = static_cast<unsigned int>(
                 std::lround(inputValue * params.scaleFactor));
+
+            // Asegúrate de que el valor no supere el nuevo máximo
+            if (params.outputIs16Bit) {
+                outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
+            } else {
+                outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
+            }
+
             writeColorComponent(outputImage.pixelData, i, outputValue, params.outputIs16Bit);
         }
     }
 }
 
 void performMaxLevelOperation(const std::string& inputFile,
-                            const std::string& outputFile, int newMaxValue) {
+                              const std::string& outputFile, int newMaxValue) {
     std::cout << "Realizando la operación de maxlevel en imgsoa con el nuevo valor máximo: "
               << newMaxValue << "\n";
     std::cout << "Archivo de entrada: " << inputFile << "\n";
@@ -92,9 +101,9 @@ void performMaxLevelOperation(const std::string& inputFile,
         std::cout << "La intensidad máxima del archivo de entrada es: " << inputImage.maxValue << "\n";
 
         PPMImage outputImage{};
-        outputImage.width = inputImage.width;
-        outputImage.height = inputImage.height;
-        outputImage.maxValue = newMaxValue;
+        outputImage.width = inputImage.width;  // Mantiene el mismo ancho
+        outputImage.height = inputImage.height; // Mantiene la misma altura
+        outputImage.maxValue = newMaxValue; // Cambia solo el valor máximo
 
         const auto params = calculateProcessingParams(inputImage, newMaxValue);
         processPixelData(inputImage, outputImage, params);
