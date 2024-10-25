@@ -10,9 +10,7 @@
 /**
 * @brief Realiza un escalado del tamaño de una imagen P6 PPM.
  *
- * Esta función lee una imagen PPM, ajusta sus valores de color a un nuevo valor máximo
- * y guarda el resultado en un nuevo archivo. La función mantiene la proporcionalidad
- * de los valores de color al escalarlos al nuevo rango.
+ * Esta función realiza un escalado de tamaño de una imagen usando la interpolación bilineal. BLA BLA BLA
  *
  * @param inputFile Ruta del archivo de imagen PPM de entrada
  * @param outputFile Ruta donde se guardará la imagen PPM resultante
