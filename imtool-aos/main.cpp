@@ -1,3 +1,4 @@
+// imgsoa/main.cpp
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -24,7 +25,9 @@ int main(int argc, char* argv[]) {
 
     try {
       const int MAX_COLOR_VALUE = 65535;
-      const int newMaxValue = std::stoi(args[4]);
+      const std::string inputFile = args[1]; // Archivo de entrada
+      const std::string outputFile = args[2]; // Archivo de salida
+      const int newMaxValue = std::stoi(args[4]); // Nuevo valor máximo
 
       if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
         std::cerr << "Error: El nivel máximo debe estar entre 0 y " << MAX_COLOR_VALUE << ".\n";
@@ -32,7 +35,7 @@ int main(int argc, char* argv[]) {
       }
 
       std::cout << "Now we will do a maxlevel operation" << "\n";
-      performMaxLevelOperation(newMaxValue); // Llamar a la función
+      performMaxLevelOperation(inputFile, outputFile, newMaxValue); // Llamar a la función
 
     } catch (const std::invalid_argument& e) {
       std::cerr << "Error: Argumento inválido para el nivel máximo.\n";
