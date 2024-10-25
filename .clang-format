@@ -15,7 +15,7 @@ AlignConsecutiveBitFields:
   PadOperators: true
 AlignConsecutiveDeclarations: None
 AlignConsecutiveMacros: None
-AlignEscapedNewlines: Left
+AlignEscapedNewlines:  Left
 AlignOperands: Align
 AlignTrailingComments:
   Kind: Always
@@ -61,7 +61,7 @@ BreakBeforeBraces: Attach
 BreakBeforeConceptDeclarations: Always
 BreakBeforeInlineASMColon: Always
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializers : BeforeColon
+BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: AfterComma
 BreakStringLiterals: true
 ColumnLimit: 100
@@ -90,7 +90,7 @@ Language: Cpp
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
 PPIndentWidth: 2
-PackConstructorInitializers : BinPack
+PackConstructorInitializers: BinPack
 PointerAlignment: Middle
 QualifierAlignment: Right
 ReferenceAlignment: Middle
