@@ -1,4 +1,4 @@
-#include "maxlevel.hpp"
+/*#include "maxlevel.hpp"
 #include "../common/binario.hpp"
 #include <iostream>
 #include <string>
@@ -118,4 +118,4 @@ void performMaxLevelOperation(const std::string& inputFile,
         std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
         throw;
     }
-}
+}*/

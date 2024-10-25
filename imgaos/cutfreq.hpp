@@ -1,37 +1,14 @@
-//
-// Created by alba on 9/10/24.
-//
+// cutfreq.hpp
 #ifndef CUTFREQ_HPP
 #define CUTFREQ_HPP
 
-#include <vector>
-#include <unordered_map>
-#include <cstddef>
+#include "../common/binario.hpp"
 
-namespace imgaos {
 
-  struct Color {
-    int r;
-    int g;
-    int b;
+constexpr int SHIFT_RED = 16;
+constexpr int SHIFT_GREEN = 8;
+constexpr int MASK = 0xFF;
 
-    bool operator==(const Color& other) const {
-      return r == other.r && g == other.g && b == other.b;
-    }
-  };
-
-  struct ColorHash {
-    std::size_t operator()(const Color& color) const {
-      return std::hash<int>()(color.r) ^ (std::hash<int>()(color.g) << 1) ^ (std::hash<int>()(color.b) << 2);
-    }
-  };
-
-  struct ImageAOS {
-    std::vector<Color> pixels;
-  };
-
-  void cutfreq(ImageAOS& image, int n);
-
-} // namespace imgaos
+void cutfreq(PPMImage& image, int n);
 
 #endif // CUTFREQ_HPP

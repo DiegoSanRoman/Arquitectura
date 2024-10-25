@@ -1,12 +1,14 @@
 #include "../common/progargs.hpp"
 #include "../imgaos/maxlevel.hpp"
+#include "../common/binario.hpp"
+#include "../imgaos/cutfreq.hpp"
 #include <iostream>
 #include <exception>
 #include <stdexcept>
 #include <string>
 
 namespace {
-  constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
+  /*constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
   constexpr int MAX_COLOR_VALUE = 65535;
 
   void validateMaxlevelParams(const ProgramArgs& args) {
@@ -53,17 +55,51 @@ namespace {
     const int newHeight = std::stoi(args.getAdditionalParams()[1]);
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
+*/
+  bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
+    if (args.getAdditionalParams().empty()) {
+      std::cerr << "Error: Se requiere el número de colores a eliminar.\n";
+      return false;
+    }
+    try {
+      number = std::stoi(args.getAdditionalParams()[0]);
+      if (number <= 0) {
+        std::cerr << "Error: El número de colores a eliminar debe ser positivo.\n";
+        return false;
+      }
+    } catch (const std::exception&) {
+      std::cerr << "Error: El parámetro proporcionado no es un número válido.\n";
+      return false;
+    }
+    return true;
+  }
+
+  void ejecutarCutfreq(PPMImage& image, int number) {
+   cutfreq(image, number);
+  }
 }
 
 int main(int argc, char* argv[]) {
   try {
     const ProgramArgs args(argc, argv);
 
+    PPMImage image;
+    if (!leerImagenPPM(args.getInputFile(), image)) {
+      return -1;
+    }
+/*
     if (args.getOperation() == "maxlevel") {
       processMaxlevel(args);
     }
     else if (args.getOperation() == "resize") {
       processResize(args);
+    }*/
+    if (args.getOperation() == "cutfreq") {
+      int number = 0;
+      if (!validarParametrosCutfreq(args, number)) {
+        return -1;
+      }
+      ejecutarCutfreq(image, number);
     }
     else {
       throw std::invalid_argument("Operación no válida");
