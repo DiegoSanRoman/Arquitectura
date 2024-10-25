@@ -27,6 +27,32 @@ namespace {
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
+
+  // Nueva función para validar parámetros de la operación "resize"
+  void validateResizeParams(const ProgramArgs& args) {
+    if (args.getAdditionalParams().size() != 2) {
+      throw std::invalid_argument("Invalid number of extra arguments for resize: " +
+                                  std::to_string(args.getAdditionalParams().size()+3));
+      // +3 porque estamos quitando los 3 primeros parámetros (imtool, archivo_fuente, arhivo salida)
+    }
+
+    const int newWidth = std::stoi(args.getAdditionalParams()[0]);
+    if (newWidth <= 0) {
+      throw std::invalid_argument("Invalid resize width: " + std::to_string(newWidth));
+    }
+    const int newHeight = std::stoi(args.getAdditionalParams()[1]);
+    if (newHeight <= 0) {
+      throw std::invalid_argument("Invalid resize height: " + std::to_string(newHeight));
+    }
+  }
+
+  // Nueva función para procesar la operación "resize"
+  void processResize(const ProgramArgs& args) {
+    validateResizeParams(args);
+    const int newWidth = std::stoi(args.getAdditionalParams()[0]);
+    const int newHeight = std::stoi(args.getAdditionalParams()[1]);
+    performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -35,7 +61,11 @@ int main(int argc, char* argv[]) {
 
     if (args.getOperation() == "maxlevel") {
       processMaxlevel(args);
-    } else {
+    }
+    else if (args.getOperation() == "resize") {
+      processResize(args);
+    }
+    else {
       throw std::invalid_argument("Operación no válida");
     }
 
