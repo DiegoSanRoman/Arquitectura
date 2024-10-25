@@ -8,7 +8,7 @@
 #include <string>
 
 namespace {
-  /*constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
+  constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
   constexpr int MAX_COLOR_VALUE = 65535;
 
   void validateMaxlevelParams(const ProgramArgs& args) {
@@ -30,6 +30,7 @@ namespace {
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
 
+  /*
   // Nueva función para validar parámetros de la operación "resize"
   void validateResizeParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 2) {
@@ -55,7 +56,8 @@ namespace {
     const int newHeight = std::stoi(args.getAdditionalParams()[1]);
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
-*/
+  */
+
   bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
     if (args.getAdditionalParams().empty()) {
       std::cerr << "Error: Se requiere el número de colores a eliminar.\n";
@@ -87,13 +89,15 @@ int main(int argc, char* argv[]) {
     if (!leerImagenPPM(args.getInputFile(), image)) {
       return -1;
     }
-/*
+
     if (args.getOperation() == "maxlevel") {
       processMaxlevel(args);
     }
+    /*
     else if (args.getOperation() == "resize") {
       processResize(args);
-    }*/
+    }
+    */
     if (args.getOperation() == "cutfreq") {
       int number = 0;
       if (!validarParametrosCutfreq(args, number)) {
