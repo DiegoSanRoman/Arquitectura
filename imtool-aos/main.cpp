@@ -1,34 +1,77 @@
-//
-// Created by diego-san-roman on 7/10/24.
-//
-// Created by diego-san-roman on 7/10/24.
 #include <iostream>
-#include <common/progargs.hpp>
-#include <imgaos/imageaos.hpp>  // Include específico para AOS
+#include <string>
+#include <imgaos/imageaos.hpp>  // Asegúrate de que esta ruta sea correcta
+
+const int MAX_INTENSITY = 65535; // Valor máximo de intensidad
+const int REQUIRED_ARGS_MAXLEVEL = 4; // Número de argumentos requeridos para maxlevel
+const int REQUIRED_ARGS_RESIZE = 5; // Número de argumentos requeridos para resize
+const int REQUIRED_ARGS_CUTFREQ = 4; // Número de argumentos requeridos para cutfreq
+const int REQUIRED_ARGS_COMPRESS = 3; // Número de argumentos requeridos para compress
 
 int main(int argc, char* argv[]) {
-  try {
-    // Parsear argumentos del programa
-    auto args = common::ProgramArguments::parse(argc, argv);
-
-    // Verificar la operación seleccionada
-    if (args.get_operation() == common::ProgramArguments::Operation::MaxLevel) {
-      // Crear y procesar imagen usando la implementación AOS
-      imgaos::ImageAOS image;
-      image.load(args.get_input_file());
-      image.scale_intensity(args.get_maxlevel());
-      image.save(args.get_output_file());
-    } else {
-      throw common::ArgumentError("Operation not implemented");
+    // Verifica el número de argumentos
+    if (argc < 3) {
+        std::cerr << "Error: Not enough arguments." << std::endl;
+        return -1;
     }
 
-    return 0; // Retorno exitoso
-  } catch (const common::ArgumentError& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-    return -1; // Error en argumentos
-  } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-    return -1; // Otro tipo de error
-  }
-}
+    std::string operation = argv[3];  // Evitar advertencias de aritmética de punteros
 
+    if (operation == "maxlevel") {
+        if (argc != REQUIRED_ARGS_MAXLEVEL) {
+            std::cerr << "Error: Invalid number of extra arguments for maxlevel: " << argc - REQUIRED_ARGS_MAXLEVEL << std::endl;
+            return -1;
+        }
+
+        int newMaxValue = std::stoi(argv[4]); // Convertir el argumento a un entero
+        if (newMaxValue < 0 || newMaxValue > MAX_INTENSITY) {
+            std::cerr << "Error: newMaxValue must be between 0 and " << MAX_INTENSITY << "." << std::endl;
+            return -1;
+        }
+
+        // Lógica para maxlevel
+        std::cout << "Executing maxlevel with newMaxValue: " << newMaxValue << std::endl;
+        // Aquí deberías llamar a la función que maneje la operación de maxlevel
+
+        return 0; // Salida exitosa después de la operación
+    }
+
+    if (operation == "resize") {
+        if (argc != REQUIRED_ARGS_RESIZE) {
+            std::cerr << "Error: Invalid number of extra arguments for resize: " << argc - REQUIRED_ARGS_RESIZE << std::endl;
+            return -1;
+        }
+        // Lógica para resize
+        std::cout << "Executing resize" << std::endl;
+        // Aquí deberías llamar a la función que maneje la operación de resize
+
+        return 0; // Salida exitosa después de la operación
+    }
+
+    if (operation == "cutfreq") {
+        if (argc != REQUIRED_ARGS_CUTFREQ) {
+            std::cerr << "Error: Invalid number of extra arguments for cutfreq: " << argc - REQUIRED_ARGS_CUTFREQ << std::endl;
+            return -1;
+        }
+        // Lógica para cutfreq
+        std::cout << "Executing cutfreq" << std::endl;
+        // Aquí deberías llamar a la función que maneje la operación de cutfreq
+
+        return 0; // Salida exitosa después de la operación
+    }
+
+    if (operation == "compress") {
+        if (argc != REQUIRED_ARGS_COMPRESS) {
+            std::cerr << "Error: Invalid number of extra arguments for compress: " << argc - REQUIRED_ARGS_COMPRESS << std::endl;
+            return -1;
+        }
+        // Lógica para compress
+        std::cout << "Executing compress" << std::endl;
+        // Aquí deberías llamar a la función que maneje la operación de compress
+
+        return 0; // Salida exitosa después de la operación
+    }
+
+    std::cerr << "Error: Unknown operation: " << operation << std::endl;
+    return -1;
+}
