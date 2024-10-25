@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
 
-            std::cout << "Now we will do a maxlevel operation" << "\n";
             performMaxLevelOperation(inputFile, outputFile, newMaxValue); // Llamar a la función
 
         } else {
