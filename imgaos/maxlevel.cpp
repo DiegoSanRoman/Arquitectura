@@ -31,8 +31,9 @@ namespace {
                                      std::size_t index, bool is16Bit) {
         if (is16Bit) {
             const std::size_t idx = index * 2;
-            return (static_cast<unsigned int>(pixelData[idx]) << BITS_PER_BYTE) |
-                   static_cast<unsigned int>(pixelData[idx + 1]);
+            // Leer en little-endian (el byte menos significativo primero)
+            return (static_cast<unsigned int>(pixelData[idx + 1]) << BITS_PER_BYTE) |
+                   static_cast<unsigned int>(pixelData[idx]);
         }
         return static_cast<unsigned int>(pixelData[index]);
     }
@@ -41,8 +42,9 @@ namespace {
                              std::size_t index, unsigned int value, bool is16Bit) {
         if (is16Bit) {
             const std::size_t idx = index * 2;
-            pixelData[idx] = static_cast<unsigned char>(value >> BITS_PER_BYTE);
-            pixelData[idx + 1] = static_cast<unsigned char>(value & BYTE_MASK);
+            // Escribir en little-endian (el byte menos significativo primero)
+            pixelData[idx] = static_cast<unsigned char>(value & BYTE_MASK);
+            pixelData[idx + 1] = static_cast<unsigned char>(value >> BITS_PER_BYTE);
         } else {
             pixelData[index] = static_cast<unsigned char>(value);
         }
