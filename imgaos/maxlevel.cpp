@@ -1,12 +1,12 @@
-#include "maxlevel.hpp"
-#include "../common/binario.hpp"
-#include <iostream>
-#include <string>
-#include <stdexcept>
-#include <cmath>
-#include <exception>
-#include <cstddef>
-#include <algorithm> // Para std::min
+#include "maxlevel.hpp"             // Para performMaxLevelOperation
+#include "../common/binario.hpp"    // Para leerImagenPPM, escribirImagenPPM
+#include <iostream>                 // Para std::cout, std::cerr
+#include <string>                   // Para std::string
+#include <stdexcept>                // Para std::invalid_argument
+#include <cmath>                    // Para std::lround
+#include <exception>                // Para std::exception
+#include <cstddef>                  // Para std::size_t
+#include <algorithm>                // Para std::min
 
 namespace {
     constexpr int BITS_PER_BYTE = 8;
