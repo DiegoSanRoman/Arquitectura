@@ -8,7 +8,7 @@
 #include <string>
 
 namespace {
-  constexpr int EXPECTED_ARGS_MAXLEVEL =1 5;
+  constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
   constexpr int MAX_COLOR_VALUE = 65535;
 
   void validateMaxlevelParams(const ProgramArgs& args) {
