@@ -1,16 +1,18 @@
 #include "../common/progargs.hpp"
-#include "../imgaos/maxlevel.hpp"
+/*#include "../imgaos/maxlevel.hpp"*/
 #include "../common/binario.hpp"
 #include "../imgaos/cutfreq.hpp"
+#include "../imgaos/resize.hpp"
 #include <iostream>
 #include <exception>
 #include <stdexcept>
 #include <string>
 
 namespace {
+  /*
   constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
-  constexpr int MAX_COLOR_VALUE = 65535;
-
+  constexpr int MAX_COLOR_VALUE = 65535;*/
+/*
   void validateMaxlevelParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 1) {
       throw std::invalid_argument("El número de argumentos para maxlevel debe ser exactamente " +
@@ -29,8 +31,8 @@ namespace {
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
+*/
 
-  /*
   // Nueva función para validar parámetros de la operación "resize"
   void validateResizeParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 2) {
@@ -56,7 +58,7 @@ namespace {
     const int newHeight = std::stoi(args.getAdditionalParams()[1]);
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
-  */
+
 
   bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
     if (args.getAdditionalParams().empty()) {
@@ -91,13 +93,13 @@ int main(int argc, char* argv[]) {
     }
 
     if (args.getOperation() == "maxlevel") {
-      processMaxlevel(args);
+      /*processMaxlevel(args);*/
     }
-    /*
+
     else if (args.getOperation() == "resize") {
       processResize(args);
     }
-    */
+
     else if (args.getOperation() == "cutfreq") {
       int number = 0;
       if (!validarParametrosCutfreq(args, number)) {
