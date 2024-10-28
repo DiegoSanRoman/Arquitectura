@@ -1,164 +1,195 @@
-/*#include <iostream>
+#include "resize.hpp"
+#include "../common/binario.hpp"
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <string>
+#include <stdexcept>
 
-// Implementación de clamp
-template <typename T>
-T clamp(T valor, T minimo, T maximo) {
-    if (valor < minimo) return minimo;
-    if (valor > maximo) return maximo;
-    return valor;
-}
-
-// Estructura para almacenar un píxel (RGB)
-struct Pixel {
-    int r, g, b;
-};
-
-// Función para leer una imagen PPM en formato P6 (binario)
-std::vector<std::vector<Pixel>> leerPPM(const std::string& archivo, int& w, int& h) {
-    std::ifstream entrada(archivo, std::ios::binary);
-    std::string formato;
-    int maxColor;
-
-    if (!entrada.is_open()) {
-        std::cerr << "Error al abrir el archivo " << archivo << std::endl;
-        exit(1);
+namespace {
+    // Implementación de clamp
+    template <typename T>
+    T clamp(T valor, T minimo, T maximo) {
+        return std::max(minimo, std::min(maximo, valor));
     }
 
-    entrada >> formato >> w >> h >> maxColor; // Leer la cabecera del archivo
-    entrada.get(); // Consumir el salto de línea que queda después de maxColor
+    // Estructura para almacenar un píxel (RGB)
+    struct Pixel {
+        int red, green, blue;
+    };
 
-    if (formato != "P6") {
-        std::cerr << "El archivo no está en formato P6 (binario)." << std::endl;
-        exit(1);
-    }
+    // Estructura para almacenar los píxeles y las razones de interpolación, con inicialización designada
+    struct PixelCoords {
+        Pixel p00{.red = 0, .green = 0, .blue = 0};
+        Pixel p01{.red = 0, .green = 0, .blue = 0};
+        Pixel p10{.red = 0, .green = 0, .blue = 0};
+        Pixel p11{.red = 0, .green = 0, .blue = 0};
+        double xRatio = 0.0;
+        double yRatio = 0.0;
+    };
 
-    std::vector<std::vector<Pixel>> imagen(h, std::vector<Pixel>(w));
+    struct Dimensions {
+        int width;
+        int height;
+    };
 
-    // Leer los píxeles en formato binario
-    for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j) {
-            char r, g, b;
-            entrada.read(&r, 1);
-            entrada.read(&g, 1);
-            entrada.read(&b, 1);
-            imagen[i][j].r = static_cast<unsigned char>(r);
-            imagen[i][j].g = static_cast<unsigned char>(g);
-            imagen[i][j].b = static_cast<unsigned char>(b);
+    struct Coords {
+        double x;
+        double y;
+    };
+
+    struct ImageDimensions {
+        int width;
+        int height;
+        int widthNueva;
+        int heightNueva;
+    };
+
+    void validateSize(int newSize) {
+        if (newSize <= 0) {
+            throw std::invalid_argument("Nuevo tamaño fuera de rango. ");
         }
     }
 
-    entrada.close();
-    return imagen;
-}
-
-
-// Función para escribir una imagen PPM
-void escribirPPM(const std::string& archivo, const std::vector<std::vector<Pixel>>& imagen, int w, int h) {
-    std::ofstream salida(archivo, std::ios::binary); // abrir en modo binario
-
-    if (!salida.is_open()) {
-        std::cerr << "Error al abrir el archivo para escritura: " << archivo << std::endl;
-        exit(1);
+    // Función para interpolar linealmente entre dos colores
+    int interpolar(int color1, int color2, double factor_itp) {
+        const int interpolatedValue = static_cast<int>(std::round(color1 + (factor_itp * (color2 - color1))));
+        return interpolatedValue;
     }
 
-    // Cabecera del archivo PPM (en texto)
-    salida << "P6\n" << w << " " << h << "\n255\n";
+    // Función para interpolar bilinealmente los colores
+    Pixel interpolacionBilineal(const PixelCoords& coords) {
+        Pixel resultado{.red = 0, .green = 0, .blue = 0};
 
-    // Escribir los píxeles en formato binario
-    for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j) {
-            unsigned char colores[3] = {
-                static_cast<unsigned char>(imagen[i][j].r),
-                static_cast<unsigned char>(imagen[i][j].g),
-                static_cast<unsigned char>(imagen[i][j].b)
-            };
-            // Escribir el pixel como 3 bytes binarios (RGB)
-            salida.write(reinterpret_cast<char*>(colores), 3);
+        resultado.red = interpolar(interpolar(coords.p00.red, coords.p01.red, coords.xRatio),
+                                   interpolar(coords.p10.red, coords.p11.red, coords.xRatio), coords.yRatio);
+        resultado.green = interpolar(interpolar(coords.p00.green, coords.p01.green, coords.xRatio),
+                                     interpolar(coords.p10.green, coords.p11.green, coords.xRatio), coords.yRatio);
+        resultado.blue = interpolar(interpolar(coords.p00.blue, coords.p01.blue, coords.xRatio),
+                                    interpolar(coords.p10.blue, coords.p11.blue, coords.xRatio), coords.yRatio);
+
+        return resultado;
+    }
+
+    // Nueva función para obtener las coordenadas correspondientes en la imagen original
+    Coords obtenerCoordenadasOriginales(int xNueva, int yNueva, const ImageDimensions& dims) {
+        return Coords{
+            .x = static_cast<double>(xNueva) * dims.width / dims.widthNueva,
+            .y = static_cast<double>(yNueva) * dims.height / dims.heightNueva
+        };
+    }
+
+    // Nueva función para obtener los píxeles y ratios de interpolación
+    PixelCoords obtenerPixelCoords(const std::vector<std::vector<Pixel>>& imagenOriginal, const Dimensions& dims, const Coords& originalCoords) {
+        int xLow = static_cast<int>(std::floor(originalCoords.x));
+        int xHigh = static_cast<int>(std::ceil(originalCoords.x));
+        int yLow = static_cast<int>(std::floor(originalCoords.y));
+        int yHigh = static_cast<int>(std::ceil(originalCoords.y));
+
+        // Asegurarse de que los índices estén dentro del rango de la imagen
+        xLow = clamp(xLow, 0, dims.width - 1);
+        xHigh = clamp(xHigh, 0, dims.width - 1);
+        yLow = clamp(yLow, 0, dims.height - 1);
+        yHigh = clamp(yHigh, 0, dims.height - 1);
+
+        PixelCoords coords;
+        coords.p00 = imagenOriginal[static_cast<std::size_t>(yLow)][static_cast<std::size_t>(xLow)];
+        coords.p01 = imagenOriginal[static_cast<std::size_t>(yLow)][static_cast<std::size_t>(xHigh)];
+        coords.p10 = imagenOriginal[static_cast<std::size_t>(yHigh)][static_cast<std::size_t>(xLow)];
+        coords.p11 = imagenOriginal[static_cast<std::size_t>(yHigh)][static_cast<std::size_t>(xHigh)];
+        coords.xRatio = originalCoords.x - xLow;
+        coords.yRatio = originalCoords.y - yLow;
+
+        return coords;
+    }
+
+    // Nueva función para obtener el píxel escalado
+    Pixel obtenerPixelEscalado(const std::vector<std::vector<Pixel>>& imagenOriginal, const Dimensions& dims, const Coords& originalCoords) {
+        const PixelCoords coords = obtenerPixelCoords(imagenOriginal, dims, originalCoords);
+        return interpolacionBilineal(coords);
+    }
+
+    // Función para escalar una imagen usando interpolación bilineal
+    std::vector<std::vector<Pixel>> escalarImagen(const std::vector<std::vector<Pixel>>& imagenOriginal, const ImageDimensions& dims) {
+        std::vector<std::vector<Pixel>> imagenEscalada(static_cast<size_t>(dims.heightNueva), std::vector<Pixel>(static_cast<size_t>(dims.widthNueva)));
+
+        for (int yNueva = 0; yNueva < dims.heightNueva; ++yNueva) {
+            for (int xNueva = 0; xNueva < dims.widthNueva; ++xNueva) {
+                const Coords originalCoords = obtenerCoordenadasOriginales(xNueva, yNueva, dims);
+                const Dimensions originalDims{.width = dims.width, .height = dims.height};
+
+                imagenEscalada[static_cast<size_t>(yNueva)][static_cast<size_t>(xNueva)] = obtenerPixelEscalado(imagenOriginal, originalDims, originalCoords);
+            }
         }
+        return imagenEscalada;
     }
 
-    salida.close();
-}
-
-// Función para interpolar linealmente entre dos valores
-int interpolar(int c1, int c2, float t) {
-    return c1 + t * (c2 - c1);
-}
-
-// Interpolación bilineal entre cuatro píxeles
-Pixel interpolacionBilineal(const Pixel& p00, const Pixel& p01, const Pixel& p10, const Pixel& p11, float tx, float ty) {
-    Pixel resultado;
-
-    resultado.r = interpolar(interpolar(p00.r, p01.r, tx), interpolar(p10.r, p11.r, tx), ty);
-    resultado.g = interpolar(interpolar(p00.g, p01.g, tx), interpolar(p10.g, p11.g, tx), ty);
-    resultado.b = interpolar(interpolar(p00.b, p01.b, tx), interpolar(p10.b, p11.b, tx), ty);
-
-    return resultado;
-}
-
-// Función para escalar una imagen usando interpolación bilineal
-std::vector<std::vector<Pixel>> escalarImagen(const std::vector<std::vector<Pixel>>& imagenOriginal, int w, int h, int w_nueva, int h_nueva) {
-    std::vector<std::vector<Pixel>> imagenEscalada(h_nueva, std::vector<Pixel>(w_nueva));
-
-    for (int y_nueva = 0; y_nueva < h_nueva; ++y_nueva) {
-        for (int x_nueva = 0; x_nueva < w_nueva; ++x_nueva) {
-            // Coordenadas correspondientes en la imagen original
-            float x_original = x_nueva * (static_cast<float>(w) / w_nueva);
-            float y_original = y_nueva * (static_cast<float>(h) / h_nueva);
-
-            int xl = static_cast<int>(std::floor(x_original));
-            int xh = static_cast<int>(std::ceil(x_original));
-            int yl = static_cast<int>(std::floor(y_original));
-            int yh = static_cast<int>(std::ceil(y_original));
-
-            // Asegurarse de no salir del rango de la imagen original
-            xl = clamp(xl, 0, w - 1);
-            xh = clamp(xh, 0, w - 1);
-            yl = clamp(yl, 0, h - 1);
-            yh = clamp(yh, 0, h - 1);
-
-
-            // Interpolación en ambas direcciones
-            float tx = x_original - xl;
-            float ty = y_original - yl;
-
-            Pixel p00 = imagenOriginal[yl][xl];
-            Pixel p01 = imagenOriginal[yl][xh];
-            Pixel p10 = imagenOriginal[yh][xl];
-            Pixel p11 = imagenOriginal[yh][xh];
-
-            imagenEscalada[y_nueva][x_nueva] = interpolacionBilineal(p00, p01, p10, p11, tx, ty);
+    // Nueva función para leer la imagen en formato PPM
+    std::vector<std::vector<Pixel>> leerImagenOriginal(const PPMImage& inputImage) {
+        std::vector<std::vector<Pixel>> originalData(static_cast<size_t>(inputImage.height), std::vector<Pixel>(static_cast<size_t>(inputImage.width)));
+        for (size_t yCoord = 0; yCoord < static_cast<size_t>(inputImage.height); ++yCoord) {
+            for (size_t xCoord = 0; xCoord < static_cast<size_t>(inputImage.width); ++xCoord) {
+                const size_t pixelIndex = (yCoord * static_cast<size_t>(inputImage.width) + xCoord) * 3;
+                originalData[yCoord][xCoord] = {
+                    .red = inputImage.pixelData[pixelIndex],
+                    .green = inputImage.pixelData[pixelIndex + 1],
+                    .blue = inputImage.pixelData[pixelIndex + 2]
+                };
+            }
         }
+        return originalData;
     }
 
-    return imagenEscalada;
-}
-
-int main(int argc, char* argv[]) {
-    if (argc != 5) {
-        std::cerr << "Uso: " << argv[0] << " <entrada.ppm> <salida.ppm> <nueva_anchura> <nueva_altura>\n";
-        return 1;
+    // Nueva función para crear la imagen escalada en formato PPMImage
+    PPMImage crearImagenEscalada(const std::vector<std::vector<Pixel>>& scaledData, const PPMImage& inputImage, int newWidth, int newHeight) {
+        PPMImage outputImage;
+        outputImage.width = newWidth;
+        outputImage.height = newHeight;
+        outputImage.maxValue = inputImage.maxValue;
+        outputImage.pixelData.resize(static_cast<std::size_t>(newWidth) * static_cast<std::size_t>(newHeight) * 3);
+        for (size_t row = 0; row < static_cast<std::size_t>(newHeight); ++row) {
+            for (size_t col = 0; col < static_cast<std::size_t>(newWidth); ++col) {
+                const size_t pixelIndex = (row * static_cast<std::size_t>(newWidth) + col) * 3;
+                outputImage.pixelData[pixelIndex] = static_cast<unsigned char>(scaledData[row][col].red);
+                outputImage.pixelData[pixelIndex + 1] = static_cast<unsigned char>(scaledData[row][col].green);
+                outputImage.pixelData[pixelIndex + 2] = static_cast<unsigned char>(scaledData[row][col].blue);
+            }
+        }
+        return outputImage;
     }
-
-    std::string archivoEntrada = argv[1];
-    std::string archivoSalida = argv[2];
-    int nuevaAnchura = std::stoi(argv[3]);
-    int nuevaAltura = std::stoi(argv[4]);
-
-    int anchuraOriginal, alturaOriginal;
-
-    // Leer la imagen original
-    auto imagenOriginal = leerPPM(archivoEntrada, anchuraOriginal, alturaOriginal);
-
-    // Escalar la imagen
-    auto imagenEscalada = escalarImagen(imagenOriginal, anchuraOriginal, alturaOriginal, nuevaAnchura, nuevaAltura);
-
-    // Guardar la imagen escalada
-    escribirPPM(archivoSalida, imagenEscalada, nuevaAnchura, nuevaAltura);
-
-    return 0;
 }
-*/
+
+//int main(int argc, char* argv[]) {
+void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
+    std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+    std::cout << "Archivo de entrada: " << inputFile << "\n";
+    std::cout << "Archivo de salida: " << outputFile << "\n";
+
+    try {
+        validateSize(newWidth);
+        validateSize(newHeight);
+
+        PPMImage inputImage{};
+        if (!leerImagenPPM(inputFile, inputImage)) {  // Leer la imagen original
+            throw std::runtime_error("Error al leer el archivo de entrada");
+        }
+
+        // Leer los datos de la imagen original
+        auto originalData = leerImagenOriginal(inputImage);
+
+        const ImageDimensions dims = {.width = inputImage.width, .height = inputImage.height, .widthNueva = newWidth, .heightNueva = newHeight};
+        auto scaledData = escalarImagen(originalData, dims); // Escalar la imagen
+
+        // Crear la imagen escalada en formato PPMImage
+        const PPMImage outputImage = crearImagenEscalada(scaledData, inputImage, newWidth, newHeight);
+
+        if (!escribirImagenPPM(outputFile, outputImage)) {
+            throw std::runtime_error("Error al escribir el archivo de salida");
+        }
+        std::cout << "Operación completada exitosamente.\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
+        throw;
+    }
+}
