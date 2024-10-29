@@ -1,4 +1,3 @@
-/*
 #include "maxlevel.hpp"             // Para performMaxLevelOperation
 #include "../common/binario.hpp"    // Para leerImagenPPM, escribirImagenPPM
 #include <iostream>                 // Para std::cout, std::cerr
@@ -122,4 +121,3 @@ void performMaxLevelOperation(const std::string& inputFile,
         throw;
     }
 }
-*/
