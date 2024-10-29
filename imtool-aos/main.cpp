@@ -1,14 +1,14 @@
 // File: imtool-aos/main.cpp
-#include "../common/progargs.hpp"         // Para ProgramArgs
-#include "../imgaos/maxlevel.hpp"         // Para performMaxLevelOperation
-#include "../common/binario.hpp"          // Para leerImagenPPM, escribirImagenPPM
-#include "../imgaos/cutfreq.hpp"          // Para cutfreq
-#include "../imgaos/resize.hpp"           // Para performResizeOperation
+#include "../common/progargs.hpp"           // Para ProgramArgs
+#include "../imgaos/maxlevel.hpp"           // Para performMaxLevelOperation
+#include "../common/binario.hpp"            // Para leerImagenPPM, escribirImagenPPM
+#include "../imgaos/cutfreq.hpp"            // Para cutfreq
+#include "../imgaos/resize.hpp"             // Para performResizeOperation
 #include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
-#include <iostream>                       // Para std::cout, std::cerr
-#include <exception>                      // Para std::exception
-#include <stdexcept>                      // Para std::invalid_argument
-#include <string>                         // Para std::string
+#include <iostream>                         // Para std::cout, std::cerr
+#include <exception>                        // Para std::exception
+#include <stdexcept>                        // Para std::invalid_argument
+#include <string>                           // Para std::string
 
 namespace {
   using namespace common;

@@ -1,12 +1,12 @@
 // File: imgsoa/main.cpp
-#include "../common/progargs.hpp"         // Para ProgramArgs
-#include "../imgsoa/maxlevel.hpp"         // Para performMaxLevelOperation
-#include "../common/binario.hpp"          // Para leerImagenPPMSoA, escribirImagenPPMSoA
+#include "../common/progargs.hpp"           // Para ProgramArgs
+#include "../imgsoa/maxlevel.hpp"           // Para performMaxLevelOperation
+#include "../common/binario.hpp"            // Para leerImagenPPMSoA, escribirImagenPPMSoA
 #include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
-#include <iostream>                       // Para std::cout, std::cerr
-#include <exception>                      // Para std::exception
-#include <stdexcept>                      // Para std::invalid_argument
-#include <string>                         // Para std::string
+#include <iostream>                         // Para std::cout, std::cerr
+#include <exception>                        // Para std::exception
+#include <stdexcept>                        // Para std::invalid_argument
+#include <string>                           // Para std::string
 
 namespace {
   using namespace common;
