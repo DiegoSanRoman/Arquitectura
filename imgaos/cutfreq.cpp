@@ -10,8 +10,12 @@
 #include <iostream>
 #include <limits>
 
+#include <iostream>
+#include <iomanip>  // Para manejar std::hex y std::dec
+
 namespace {
 
+// Calcular frecuencia de colores
 std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImage& image) {
     std::unordered_map<uint32_t, int> colorFrequency;
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
@@ -20,9 +24,17 @@ std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImage& imag
                                static_cast<uint32_t>(image.pixelData[i + 2]);
         colorFrequency[color]++;
     }
+
+    // Print para debug de frecuencias de color
+    std::cout << "Frecuencias de color:\n";
+    for (const auto& [color, freq] : colorFrequency) {
+        std::cout << "Color: 0x" << std::hex << color << " - Frecuencia: " << std::dec << freq << '\n';
+    }
+
     return colorFrequency;
 }
 
+// Obtener colores menos frecuentes
 std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uint32_t, int>& colorFrequency, int n) {
     std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
     std::ranges::sort(frequencyList, [](const auto& colorA, const auto& colorB) {
@@ -44,9 +56,17 @@ std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uin
     for (std::size_t i = 0; i < limit; ++i) {
         colorsToRemove.push_back(frequencyList[i].first);
     }
+
+    // Print para debug de colores seleccionados para eliminar
+    std::cout << "\nColores menos frecuentes seleccionados para eliminar:\n";
+    for (const auto& color : colorsToRemove) {
+        std::cout << "Color a eliminar: 0x" << std::hex << color << '\n';
+    }
+
     return colorsToRemove;
 }
 
+// Encontrar colores de reemplazo
 std::unordered_map<uint32_t, uint32_t> encontrarColoresReemplazo(const std::vector<std::pair<uint32_t, int>>& frequencyList, const std::unordered_set<uint32_t>& colorsToRemoveSet) {
     std::unordered_map<uint32_t, uint32_t> replacementMap;
     for (const auto& colorToRemove : colorsToRemoveSet) {
@@ -66,10 +86,15 @@ std::unordered_map<uint32_t, uint32_t> encontrarColoresReemplazo(const std::vect
             }
         }
         replacementMap[colorToRemove] = closestColor;
+
+        // Print para debug del color de reemplazo
+        std::cout << "Color 0x" << std::hex << colorToRemove
+                  << " será reemplazado por 0x" << closestColor << '\n';
     }
     return replacementMap;
 }
 
+// Reemplazar colores en la imagen
 void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint32_t>& replacementMap) {
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
         const uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << SHIFT_RED) |
@@ -78,6 +103,12 @@ void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint3
         auto iterator = replacementMap.find(color);
         if (iterator != replacementMap.end()) {
             const uint32_t newColor = iterator->second;
+
+            // Print para ver el color original y el nuevo color
+            std::cout << "Reemplazando color: 0x" << std::hex << color
+                      << " con 0x" << newColor << std::dec << '\n';
+
+            // Realizar el reemplazo de color en la imagen
             image.pixelData[i] = (newColor >> SHIFT_RED) & MASK;
             image.pixelData[i + 1] = (newColor >> SHIFT_GREEN) & MASK;
             image.pixelData[i + 2] = newColor & MASK;
@@ -87,8 +118,16 @@ void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint3
 
 } // namespace
 
+// Función principal cutfreq
 void cutfreq(PPMImage& image, int n) {
+    std::cout << "Inicio de cutfreq\n";
+
     auto colorFrequency = calcularFrecuenciaColores(image);
+    if (n > colorFrequency.size()) {
+      std::cout << "Advertencia: 'n' es mayor que la cantidad de colores únicos en la imagen. Ajustando 'n' a " << colorFrequency.size() << '\n';
+      n = colorFrequency.size();  // Ajusta `n` para que no exceda el número de colores únicos
+    }
+
     auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);
 
     std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
@@ -105,8 +144,15 @@ void cutfreq(PPMImage& image, int n) {
         return ((colorA.first >> SHIFT_RED) & MASK) > ((colorB.first >> SHIFT_RED) & MASK);
     });
 
+    std::cout << "\nLista de frecuencias ordenada:\n";
+    for (const auto& [color, freq] : frequencyList) {
+        std::cout << "Color: 0x" << std::hex << color << " - Frecuencia: " << std::dec << freq << '\n';
+    }
+
     const std::unordered_set<uint32_t> colorsToRemoveSet(colorsToRemove.begin(), colorsToRemove.end());
     auto replacementMap = encontrarColoresReemplazo(frequencyList, colorsToRemoveSet);
 
     reemplazarColores(image, replacementMap);
+
+    std::cout << "Fin de cutfreq\n";
 }

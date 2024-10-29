@@ -115,5 +115,4 @@ bool escribirImagenPPM(const std::string& filePath, const PPMImage& image) {
     } catch (const std::exception& e) {
         std::cerr << "Error al escribir imagen PPM: " << e.what() << '\n';
         return false;
-    }
-}
+    }}

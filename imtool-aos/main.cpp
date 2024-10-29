@@ -79,6 +79,7 @@ namespace {
   }
 
   void ejecutarCutfreq(PPMImage& image, int number) {
+    std::cout << "Probando cutfreq...\n";
    cutfreq(image, number);
   }
 }
