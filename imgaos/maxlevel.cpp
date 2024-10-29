@@ -63,15 +63,15 @@ namespace {
       pixelData[index] = static_cast<unsigned char>(value);
     }
 
-    // Función para calcular los parámetros de procesamiento de píxeles
-    PixelProcessingParams calculateProcessingParams(const PPMImage& inputImage, int newMaxValue) {
-        return {
-            static_cast<double>(newMaxValue) / inputImage.maxValue,     // Factor de escala
-            inputImage.maxValue > MAX_COLOR_8BIT,                       // Si los valores de entrada son de 16 bits
-            newMaxValue > MAX_COLOR_8BIT,                               // Si los valores de salida son de 16 bits
-            static_cast<std::size_t>(inputImage.width) *
-            static_cast<std::size_t>(inputImage.height) * 3             // Total de componentes para 3 canales RGB
-        };
+  // Función para calcular los parámetros de procesamiento de píxeles
+  PixelProcessingParams calculateProcessingParams(const PPMImage& inputImage, int newMaxValue) {
+      return {
+        .scaleFactor = static_cast<double>(newMaxValue) / inputImage.maxValue,
+        .inputIs16Bit = inputImage.maxValue > MAX_COLOR_8BIT,
+        .outputIs16Bit = newMaxValue > MAX_COLOR_8BIT,
+        .totalComponents = static_cast<std::size_t>(inputImage.width) *
+                           static_cast<std::size_t>(inputImage.height) * 3
+    };
     }
 
     // Función para procesar los datos de píxeles
