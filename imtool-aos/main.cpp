@@ -1,3 +1,4 @@
+// File: imtool-aos/main.cpp
 #include "../common/progargs.hpp"
 #include "../imgaos/maxlevel.hpp"
 #include "../common/binario.hpp"
@@ -9,16 +10,19 @@
 #include <string>
 
 namespace {
-
+  // Valor máximo permitido para los colores en una imagen PPM
   constexpr int MAX_COLOR_VALUE = 65535;
 
+  // Función para validar los parámetros de la operación "maxlevel"
   void validateMaxlevelParams(const ProgramArgs& args) {
+    // Verificar que se haya proporcionado un solo parámetro adicional
     if (args.getAdditionalParams().size() != 1) {
       throw std::invalid_argument("Invalid number of extra arguments for maxlevel: " +
                                   std::to_string(args.getAdditionalParams().size() + 3));
-      // +3 because we are excluding the first three parameters (imtool, input file, output file)
+      // +3 porque estamos quitando los 3 primeros parámetros (imtool, archivo_fuente, arhivo salida)
     }
 
+    // Verificar que el nuevo valor máximo sea válido
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
     if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
       throw std::invalid_argument("The max level must be between 0 and " +
@@ -26,13 +30,17 @@ namespace {
     }
   }
 
+  // Función para procesar la operación "maxlevel"
   void processMaxlevel(const ProgramArgs& args) {
+    // Validar los parámetros de la operación
     validateMaxlevelParams(args);
+    // Obtener el nuevo valor máximo
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
+    // Llamar a la función que realiza la operación
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
 
-  // Nueva función para validar parámetros de la operación "resize"
+  // Función para validar parámetros de la operación "resize"
   void validateResizeParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 2) {
       throw std::invalid_argument("Invalid number of extra arguments for resize: " +

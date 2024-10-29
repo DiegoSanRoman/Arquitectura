@@ -1,3 +1,4 @@
+// File: common/binario.hpp
 #ifndef BINARIO_HPP
 #define BINARIO_HPP
 

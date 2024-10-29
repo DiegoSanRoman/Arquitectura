@@ -1,3 +1,4 @@
+// File: common/binario.cpp
 #include "binario.hpp"
 #include <fstream>
 #include <iostream>

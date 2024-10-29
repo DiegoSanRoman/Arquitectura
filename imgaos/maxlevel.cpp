@@ -1,53 +1,66 @@
-#include "maxlevel.hpp"             // Para performMaxLevelOperation
-#include "../common/binario.hpp"    // Para leerImagenPPM, escribirImagenPPM
-#include <iostream>                 // Para std::cout, std::cerr
-#include <string>                   // Para std::string
-#include <stdexcept>                // Para std::invalid_argument
-#include <cmath>                    // Para std::lround
-#include <exception>                // Para std::exception
-#include <cstddef>                  // Para std::size_t
-#include <algorithm>                // Para std::min
+// File: imgaos/maxlevel.cpp
+#include "maxlevel.hpp"                             // Para performMaxLevelOperation
+#include "../common/binario.hpp"                    // Para leerImagenPPM, escribirImagenPPM
+#include <iostream>                                 // Para std::cout, std::cerr
+#include <string>                                   // Para std::string
+#include <stdexcept>                                // Para std::invalid_argument
+#include <cmath>                                    // Para std::lround
+#include <exception>                                // Para std::exception
+#include <cstddef>                                  // Para std::size_t
+#include <algorithm>                                // Para std::min
 
+// Definición de la función performMaxLevelOperationº
 namespace {
-    constexpr int BITS_PER_BYTE = 8;
-    constexpr unsigned int BYTE_MASK = 0xFF;
-    constexpr int MAX_COLOR_8BIT = 255;
-    constexpr int MAX_COLOR_16BIT = 65535;
+    // Constantes para el procesamiento de píxeles
+    constexpr int BITS_PER_BYTE = 8;                // Bits por byte
+    constexpr unsigned int BYTE_MASK = 0xFF;        // Máscara para un byte
+    constexpr int MAX_COLOR_8BIT = 255;             // Valor máximo para un color de 8 bits
+    constexpr int MAX_COLOR_16BIT = 65535;          // Valor máximo para un color de 16 bits
 
+    // Parámetros para el procesamiento de píxeles
     struct PixelProcessingParams {
-        double scaleFactor;
-        bool inputIs16Bit;
-        bool outputIs16Bit;
-        std::size_t totalComponents;
+        double scaleFactor;                         // Factor de escala
+        bool inputIs16Bit;                          // Si los valores de entrada son de 16 bits
+        bool outputIs16Bit;                         // Si los valores de salida son de 16 bits
+        std::size_t totalComponents;                // Total de componentes de píxeles
     };
 
+  // Función para validar el nuevo valor máximo
     void validateMaxValue(int newMaxValue) {
         if (newMaxValue <= 0 || newMaxValue > MAX_COLOR_16BIT) {
             throw std::invalid_argument("Nuevo valor máximo fuera de rango válido (1-65535)");
         }
     }
 
-    unsigned int readColorComponent(const std::vector<unsigned char>& pixelData,
-                                     std::size_t index, bool is16Bit) {
-        if (is16Bit) {
-            const std::size_t idx = index * 2;
-            // Leer en little-endian (el byte menos significativo primero)
-            return (static_cast<unsigned int>(pixelData[idx + 1]) << BITS_PER_BYTE) |
-                   static_cast<unsigned int>(pixelData[idx]);
-        }
-        return static_cast<unsigned int>(pixelData[index]);
+  // Función para leer un componente de color
+  unsigned int readColorComponent(const std::vector<unsigned char>& pixelData,
+                                   std::size_t index, bool is16Bit) {
+      // Si es de 16 bits, se almacena en 2 bytes (16 bits)
+      if (is16Bit) {
+        // Calcular el índice del byte
+        const std::size_t idx = index * 2;
+        // Leer en little-endian (el byte menos significativo primero)
+        return (static_cast<unsigned int>(pixelData[idx + 1]) << BITS_PER_BYTE) |
+               static_cast<unsigned int>(pixelData[idx]);
+      }
+      // Si es de 8 bits, se almacena en 1 byte (8 bits)
+      return static_cast<unsigned int>(pixelData[index]);
     }
 
-    void writeColorComponent(std::vector<unsigned char>& pixelData,
-                             std::size_t index, unsigned int value, bool is16Bit) {
-        if (is16Bit) {
-            const std::size_t idx = index * 2;
-            // Escribir en little-endian (el byte menos significativo primero)
-            pixelData[idx] = static_cast<unsigned char>(value & BYTE_MASK);
-            pixelData[idx + 1] = static_cast<unsigned char>(value >> BITS_PER_BYTE);
-        } else {
-            pixelData[index] = static_cast<unsigned char>(value);
-        }
+  // Función para escribir un componente de color
+  void writeColorComponent(std::vector<unsigned char>& pixelData,
+                           std::size_t index, unsigned int value, bool is16Bit) {
+      // Si es de 16 bits, se almacena en 2 bytes (16 bits)
+      if (is16Bit) {
+        // Calcular el índice del byte
+        const std::size_t idx = index * 2;
+        // Escribir en little-endian (el byte menos significativo primero)
+        pixelData[idx] = static_cast<unsigned char>(value & BYTE_MASK);
+        pixelData[idx + 1] = static_cast<unsigned char>(value >> BITS_PER_BYTE);
+        return;
+      }
+      // Si es de 8 bits, se almacena en 1 byte (8 bits)
+      pixelData[index] = static_cast<unsigned char>(value);
     }
 
     PixelProcessingParams calculateProcessingParams(const PPMImage& inputImage, int newMaxValue) {
