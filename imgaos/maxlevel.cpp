@@ -63,36 +63,43 @@ namespace {
       pixelData[index] = static_cast<unsigned char>(value);
     }
 
+    // Función para calcular los parámetros de procesamiento de píxeles
     PixelProcessingParams calculateProcessingParams(const PPMImage& inputImage, int newMaxValue) {
         return {
-            static_cast<double>(newMaxValue) / inputImage.maxValue,
-            inputImage.maxValue > MAX_COLOR_8BIT,
-            newMaxValue > MAX_COLOR_8BIT,
+            static_cast<double>(newMaxValue) / inputImage.maxValue,     // Factor de escala
+            inputImage.maxValue > MAX_COLOR_8BIT,                       // Si los valores de entrada son de 16 bits
+            newMaxValue > MAX_COLOR_8BIT,                               // Si los valores de salida son de 16 bits
             static_cast<std::size_t>(inputImage.width) *
-            static_cast<std::size_t>(inputImage.height) * 3 // Total de componentes para 3 canales RGB
+            static_cast<std::size_t>(inputImage.height) * 3             // Total de componentes para 3 canales RGB
         };
     }
 
+    // Función para procesar los datos de píxeles
     void processPixelData(const PPMImage& inputImage, PPMImage& outputImage,
                           const PixelProcessingParams& params) {
+        // Calcular el número de bytes por componente de salida
         const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2 : 1;
         const std::size_t outputTotalBytes = params.totalComponents * outputBytesPerComponent;
 
+        // Redimensionar el vector de píxeles de salida
         outputImage.pixelData.resize(outputTotalBytes);
 
+        // Procesar cada componente de color
         for (std::size_t i = 0; i < params.totalComponents; ++i) {
+            // Leer el valor del píxel de entrada
             const unsigned int inputValue = readColorComponent(inputImage.pixelData, i, params.inputIs16Bit);
             // Escalar el valor del píxel
             auto outputValue = static_cast<unsigned int>(
                 std::lround(inputValue * params.scaleFactor));
-
             // Asegúrate de que el valor no supere el nuevo máximo
             if (params.outputIs16Bit) {
+                // Para 16 bits
                 outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
             } else {
+                // Para 8 bits
                 outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
             }
-
+            // Escribir el valor del píxel de salida
             writeColorComponent(outputImage.pixelData, i, outputValue, params.outputIs16Bit);
         }
     }
@@ -100,36 +107,41 @@ namespace {
 
 void performMaxLevelOperation(const std::string& inputFile,
                               const std::string& outputFile, int newMaxValue) {
-    std::cout << "Realizando la operación de maxlevel en imgsoa con el nuevo valor máximo: "
-              << newMaxValue << "\n";
-    std::cout << "Archivo de entrada: " << inputFile << "\n";
-    std::cout << "Archivo de salida: " << outputFile << "\n";
+    // Mostrar información sobre la operación (Esto después lo borraré, pero de momento lo dejo para que se vea)
+    std::cout << "Maxlevel-soa con nuevo valor máximo: " << newMaxValue << "\n" << "Archivo de entrada: " << inputFile << "\n" << "Archivo de salida: " << outputFile << "\n";
 
     try {
+        // Validar el nuevo valor máximo
         validateMaxValue(newMaxValue);
 
+        // Leer la imagen de entrada
         PPMImage inputImage{};
         if (!leerImagenPPM(inputFile, inputImage)) {
             throw std::runtime_error("Error al leer el archivo de entrada");
         }
 
+        // Esto también se borrará
         std::cout << "La intensidad máxima del archivo de entrada es: " << inputImage.maxValue << "\n";
 
+        // Crear la imagen de salida con el mismo tamaño y el nuevo valor máximo
         PPMImage outputImage{};
-        outputImage.width = inputImage.width;  // Mantiene el mismo ancho
-        outputImage.height = inputImage.height; // Mantiene la misma altura
-        outputImage.maxValue = newMaxValue; // Cambia solo el valor máximo
+        outputImage.width = inputImage.width;           // Mantiene el mismo ancho
+        outputImage.height = inputImage.height;         // Mantiene la misma altura
+        outputImage.maxValue = newMaxValue;             // Cambia solo el valor máximo
 
+        // Calcular los parámetros de procesamiento
         const auto params = calculateProcessingParams(inputImage, newMaxValue);
+
+        // Procesar los datos de píxeles
         processPixelData(inputImage, outputImage, params);
 
+        // Escribir la imagen de salida
         if (!escribirImagenPPM(outputFile, outputImage)) {
             throw std::runtime_error("Error al escribir el archivo de salida");
         }
 
-        std::cout << "Operación completada exitosamente.\n";
-
-    } catch (const std::exception& e) {
+    } // Capturar excepciones
+      catch (const std::exception& e) {
         std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
         throw;
     }
