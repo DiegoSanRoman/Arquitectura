@@ -1,13 +1,13 @@
 // File: imtool-aos/main.cpp
-#include "../common/progargs.hpp"
-#include "../imgaos/maxlevel.hpp"
-#include "../common/binario.hpp"
-#include "../imgaos/cutfreq.hpp"
-#include "../imgaos/resize.hpp"
-#include <iostream>
-#include <exception>
-#include <stdexcept>
-#include <string>
+#include "../common/progargs.hpp"         // Para ProgramArgs
+#include "../imgaos/maxlevel.hpp"         // Para performMaxLevelOperation
+#include "../common/binario.hpp"          // Para leerImagenPPM, escribirImagenPPM
+#include "../imgaos/cutfreq.hpp"          // Para cutfreq
+#include "../imgaos/resize.hpp"           // Para performResizeOperation
+#include <iostream>                       // Para std::cout, std::cerr
+#include <exception>                      // Para std::exception
+#include <stdexcept>                      // Para std::invalid_argument
+#include <string>                         // Para std::string
 
 namespace {
   // Valor máximo permitido para los colores en una imagen PPM
