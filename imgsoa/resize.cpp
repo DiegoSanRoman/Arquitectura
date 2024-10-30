@@ -1,178 +1,229 @@
-//
-// Created by barbara on 19/10/24.
-//
-/*
+#include "resize.hpp"
+#include "../common/binario.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <string>
+#include <stdexcept>
 #include <array>
 
-// Implementación de clamp
-template <typename T>
-T clamp(T valor, T minimo, T maximo) {
-    if (valor < minimo) return minimo;
-    if (valor > maximo) return maximo;
-    return valor;
+namespace {
+  #define MAX_VALUE 255;
+
+  // Implementación de clamp
+  template <typename T>
+  T clamp(T valor, T minimo, T maximo) {
+    return std::max(minimo, std::min(maximo, valor));
+  }
+
+  void validateValue(int newValue) {
+    if (newValue <= 0) {
+      throw std::invalid_argument("Nuevo tamaño fuera de rango. ");
+    }
+  }
+
+  // Estructura Color para almacenar componentes interpolados RGB
+  struct Color {
+    unsigned char red = 0;
+    unsigned char green = 0;
+    unsigned char blue = 0;
+  };
+  // Estructura para los parámetros de interpolación
+  struct InterpolacionParams {
+    int xLow, xHigh;
+    int yLow, yHigh;
+    float xRatio, yRatio;
+  };
+  // Estructura para almacenar los índices de interpolación
+  struct IndicesInterpolacion {
+    int index00;
+    int index01;
+    int index10;
+    int index11;
+  };
+  struct DimensionesImagen {
+    int width;
+    int height;
+  };
+  struct CoordenadasEscaladas {
+    int x_nueva;
+    int y_nueva;
+  };
+
+
+
+  // Estructura para almacenar la imagen en formato SOA (Structure of Arrays)
+  struct ImageSOA {
+    std::vector<unsigned char> redChannel;
+    std::vector<unsigned char> greenChannel;
+    std::vector<unsigned char> blueChannel;
+    int width = 0;
+    int height = 0;
+  };
+
+  ImageSOA leerImagenSOA(const PPMImage& inputImage) {
+    ImageSOA imageSOA;
+    imageSOA.width = inputImage.width;
+    imageSOA.height = inputImage.height;
+    const size_t totalPixels = static_cast<size_t>(inputImage.width) * static_cast<size_t>(inputImage.height);
+
+    // Reservar espacio para cada canal en la estructura SOA
+    imageSOA.redChannel.resize(totalPixels);
+    imageSOA.greenChannel.resize(totalPixels);
+    imageSOA.blueChannel.resize(totalPixels);
+
+    for (size_t i = 0; i < totalPixels; ++i) {
+      imageSOA.redChannel[i] = inputImage.pixelData[i * 3];
+      imageSOA.greenChannel[i] = inputImage.pixelData[(i * 3) + 1];
+      imageSOA.blueChannel[i] = inputImage.pixelData[(i * 3) + 2];
+    }
+    return imageSOA;
+  }
+
+  // Función para interpolar linealmente entre dos valores
+int interpolar(int color1, int color2, double factor_itp) {
+    return static_cast<int>(color1 + (factor_itp * (color2 - color1)));
 }
+  // Función para realizar la interpolación de un único componente
+  unsigned char interpolarComponente(const std::vector<unsigned char>& channel, const IndicesInterpolacion& indices, float xRatio, float yRatio) {
+    const auto top = static_cast<float>(
+        interpolar(interpolar(channel[static_cast<size_t>(indices.index00)], channel[static_cast<size_t>(indices.index01)], xRatio),
+                   interpolar(channel[static_cast<size_t>(indices.index10)], channel[static_cast<size_t>(indices.index11)], xRatio),
+                   yRatio)
+    );
+    return static_cast<unsigned char>(top);
+  }
 
-// Función para leer una imagen PPM en formato P6 (binario)
-void leerPPM(const std::string& archivo, int& w, int& h, std::vector<unsigned char>& r, std::vector<unsigned char>& g, std::vector<unsigned char>& b) {
-    std::ifstream entrada(archivo, std::ios::binary);
-    std::string formato;
-    int maxColor;
-
-    if (!entrada.is_open()) {
-        std::cerr << "Error al abrir el archivo " << archivo << std::endl;
-        exit(1);
-    }
-
-    entrada >> formato >> w >> h >> maxColor; // Leer la cabecera del archivo
-    entrada.get(); // Consumir el salto de línea que queda después de maxColor
-
-    if (formato != "P6") {
-        std::cerr << "El archivo no está en formato P6 (binario)." << std::endl;
-        exit(1);
-    }
-
-    // Inicializar los vectores para cada componente RGB
-    r.resize(w * h);
-    g.resize(w * h);
-    b.resize(w * h);
-
-    // Leer los píxeles en formato binario
-    for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j) {
-            char rr, gg, bb;
-            entrada.read(&rr, 1);
-            entrada.read(&gg, 1);
-            entrada.read(&bb, 1);
-            int idx = i * w + j;
-            r[idx] = static_cast<unsigned char>(rr);
-            g[idx] = static_cast<unsigned char>(gg);
-            b[idx] = static_cast<unsigned char>(bb);
-        }
-    }
-
-    entrada.close();
-}
-
-// Función para escribir una imagen PPM en formato P6
-void escribirPPM(const std::string& archivo, const std::vector<unsigned char>& r, const std::vector<unsigned char>& g, const std::vector<unsigned char>& b, int w, int h) {
-    std::ofstream salida(archivo, std::ios::binary); // abrir en modo binario
-
-    if (!salida.is_open()) {
-        std::cerr << "Error al abrir el archivo para escritura: " << archivo << std::endl;
-        exit(1);
-    }
-
-    // Cabecera del archivo PPM (en texto)
-    salida << "P6\n" << w << " " << h << "\n255\n";
-
-    // Escribir los píxeles en formato binario
-    for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j) {
-            int idx = i * w + j;
-            unsigned char colores[3] = { r[idx], g[idx], b[idx] };
-            salida.write(reinterpret_cast<char*>(colores), 3);
-        }
-    }
-
-    salida.close();
-}
-
-// Función para interpolar linealmente entre dos valores
-int interpolar(int c1, int c2, float t) {
-    return c1 + t * (c2 - c1);
-}
-
-// Interpolación bilineal entre cuatro píxeles (sin usar estructuras)
-void interpolacionBilineal(const std::vector<unsigned char>& r, const std::vector<unsigned char>& g, const std::vector<unsigned char>& b, int w, int h, int xl, int xh, int yl, int yh, float tx, float ty, unsigned char& rInterpolado, unsigned char& gInterpolado, unsigned char& bInterpolado) {
-
+  // Función de interpolación bilineal
+  void interpolacionBilineal(const ImageSOA& img, const InterpolacionParams& params, Color& colorInterpolado) {
     // Calcular los índices de los 4 píxeles
-    int idx00 = yl * w + xl; // Píxel en la esquina superior izquierda
-    int idx01 = yl * w + xh; // Píxel en la esquina superior derecha
-    int idx10 = yh * w + xl; // Píxel en la esquina inferior izquierda
-    int idx11 = yh * w + xh; // Píxel en la esquina inferior derecha
+    const int index00 = (params.yLow * img.width) + params.xLow;  // Píxel en la esquina superior izquierda
+    const int index01 = (params.yLow * img.width) + params.xHigh; // Píxel en la esquina superior derecha
+    const int index10 = (params.yHigh * img.width) + params.xLow; // Píxel en la esquina inferior izquierda
+    const int index11 = (params.yHigh * img.width) + params.xHigh; // Píxel en la esquina inferior derecha
 
     // Hacer la interpolación bilineal para los tres componentes
-    rInterpolado = interpolar(interpolar(r[idx00], r[idx01], tx), interpolar(r[idx10], r[idx11], tx), ty);
-    gInterpolado = interpolar(interpolar(g[idx00], g[idx01], tx), interpolar(g[idx10], g[idx11], tx), ty);
-    bInterpolado = interpolar(interpolar(b[idx00], b[idx01], tx), interpolar(b[idx10], b[idx11], tx), ty);
-}
+    // Inicializar la estructura IndicesInterpolacion
+    const IndicesInterpolacion indices = {.index00 = index00, .index01 = index01, .index10 = index10, .index11 = index11};
+    colorInterpolado.red = interpolarComponente(img.redChannel, indices, params.xRatio, params.yRatio);
+    colorInterpolado.green = interpolarComponente(img.greenChannel, indices, params.xRatio, params.yRatio);
+    colorInterpolado.blue = interpolarComponente(img.blueChannel, indices, params.xRatio, params.yRatio);
+  }
+
+  // Función auxiliar para procesar un píxel escalado
+  void procesarPixelEscalado(const ImageSOA& original, const CoordenadasEscaladas& coord, const ImageSOA& escalada, Color& colorInterpolado) {
+    const float x_original = static_cast<float>(coord.x_nueva) * (static_cast<float>(original.width) / static_cast<float>(escalada.width));
+    const float y_original = static_cast<float>(coord.y_nueva) * (static_cast<float>(original.height) / static_cast<float>(escalada.height));
+
+    const int xLow = clamp(static_cast<int>(std::floor(x_original)), 0, original.width - 1);
+    const int xHigh = clamp(static_cast<int>(std::ceil(x_original)), 0, original.width - 1);
+    const int yLow = clamp(static_cast<int>(std::floor(y_original)), 0, original.height - 1);
+    const int yHigh = clamp(static_cast<int>(std::ceil(y_original)), 0, original.height - 1);
+
+    const float xRatio = x_original - static_cast<float>(xLow);
+    const float yRatio = y_original - static_cast<float>(yLow);
+
+    const InterpolacionParams params = {
+      .xLow = xLow,
+      .xHigh = xHigh,
+      .yLow = yLow,
+      .yHigh = yHigh,
+      .xRatio = xRatio,
+      .yRatio = yRatio
+  };
+
+    interpolacionBilineal(original, params, colorInterpolado);
+  }
 
 
-// Función para escalar una imagen usando interpolación bilineal
-void escalarImagen(const std::vector<unsigned char>& rOriginal, const std::vector<unsigned char>& gOriginal, const std::vector<unsigned char>& bOriginal,int w, int h, int w_nueva, int h_nueva, std::vector<unsigned char>& rEscalada, std::vector<unsigned char>& gEscalada, std::vector<unsigned char>& bEscalada) {
-
-    // Inicializar los vectores para los componentes R, G, B de la imagen escalada
-    rEscalada.resize(w_nueva * h_nueva);
-    gEscalada.resize(w_nueva * h_nueva);
-    bEscalada.resize(w_nueva * h_nueva);
-
-    // Realizar la interpolación bilineal para cada píxel
-    for (int y_nueva = 0; y_nueva < h_nueva; ++y_nueva) {
-        for (int x_nueva = 0; x_nueva < w_nueva; ++x_nueva) {
-            // Coordenadas correspondientes en la imagen original
-            float x_original = x_nueva * (static_cast<float>(w) / w_nueva);
-            float y_original = y_nueva * (static_cast<float>(h) / h_nueva);
-
-            int xl = static_cast<int>(std::floor(x_original));
-            int xh = static_cast<int>(std::ceil(x_original));
-            int yl = static_cast<int>(std::floor(y_original));
-            int yh = static_cast<int>(std::ceil(y_original));
+  // Función principal para escalar la imagen
+  void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
+    escalada.redChannel.resize(static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height));
+    escalada.greenChannel.resize(static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height));
+    escalada.blueChannel.resize(static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height));
 
 
-            // Asegurarse de no salir del rango de la imagen original
-            xl = clamp(xl, 0, w - 1);
-            xh = clamp(xh, 0, w - 1);
-            yl = clamp(yl, 0, h - 1);
-            yh = clamp(yh, 0, h - 1);
+    for (int y_nueva = 0; y_nueva < escalada.height; ++y_nueva) {
+      for (int x_nueva = 0; x_nueva < escalada.width; ++x_nueva) {
+        Color colorInterpolado;
+        const CoordenadasEscaladas coord = {.x_nueva = x_nueva, .y_nueva = y_nueva};
+        procesarPixelEscalado(original, coord, escalada, colorInterpolado);
 
-            // Interpolación en ambas direcciones
-            float tx = x_original - xl;
-            float ty = y_original - yl;
 
-            // Variables para almacenar los componentes interpolados
-            unsigned char rInterpolado, gInterpolado, bInterpolado;
-
-            // Llamar a la función de interpolación bilineal
-            interpolacionBilineal(rOriginal, gOriginal, bOriginal, w, h, xl, xh, yl, yh, tx, ty, rInterpolado, gInterpolado, bInterpolado);
-
-            // Asignar los valores interpolados en los vectores de la imagen escalada
-            int idx = y_nueva * w_nueva + x_nueva;
-            rEscalada[idx] = rInterpolado;
-            gEscalada[idx] = gInterpolado;
-            bEscalada[idx] = bInterpolado;
-        }
+        const int idx = (y_nueva * escalada.width) + x_nueva;
+        escalada.redChannel[static_cast<size_t>(idx)] = colorInterpolado.red;
+        escalada.greenChannel[static_cast<size_t>(idx)] = colorInterpolado.green;
+        escalada.blueChannel[static_cast<size_t>(idx)] = colorInterpolado.blue;
+      }
     }
-}
+  }
+  // Función auxiliar para convertir de ImageSOA a PPMImage
+  PPMImage convertirSOAAImagePPM(const ImageSOA& imagenSOA) {
+    PPMImage outputImage;
+    outputImage.width = imagenSOA.width;
+    outputImage.height = imagenSOA.height;
+    outputImage.maxValue = MAX_VALUE;
+    outputImage.pixelData.resize(static_cast<size_t>(imagenSOA.width) * static_cast<size_t>(imagenSOA.height) * 3);
 
-int main(int argc, char* argv[]) {
-    if (argc != 5) {
-        std::cerr << "Uso: " << argv[0] << " <entrada.ppm> <salida.ppm> <nueva_anchura> <nueva_altura>\n";
-        return 1;
+    for (size_t i = 0; i < outputImage.pixelData.size() / 3; ++i) {
+        outputImage.pixelData[i * 3] = imagenSOA.redChannel[i];
+        outputImage.pixelData[(i * 3) + 1] = imagenSOA.greenChannel[i];
+        outputImage.pixelData[(i * 3) + 2] = imagenSOA.blueChannel[i];
     }
-    std::string archivoEntrada = argv[1];
-    std::string archivoSalida = argv[2];
-    int nuevaAnchura = std::stoi(argv[3]);
-    int nuevaAltura = std::stoi(argv[4]);
-
-    int anchuraOriginal, alturaOriginal;
-
-    // Leer la imagen original
-    std::vector<unsigned char> rOriginal, gOriginal, bOriginal;
-    leerPPM(archivoEntrada, anchuraOriginal, alturaOriginal, rOriginal, gOriginal, bOriginal);
-
-    // Inicializar los vectores para la imagen escalada
-    std::vector<unsigned char> rEscalada, gEscalada, bEscalada;
-
-    // Llamar a la función para escalar la imagen
-    escalarImagen(rOriginal, gOriginal, bOriginal, anchuraOriginal, alturaOriginal, nuevaAnchura, nuevaAltura, rEscalada, gEscalada, bEscalada);
-
-    // Guardar la imagen escalada
-    escribirPPM(archivoSalida, rEscalada, gEscalada, bEscalada, nuevaAnchura, nuevaAltura);
-
-    return 0;
+    return outputImage;
 }
-*/
+
+  // Función auxiliar para inicializar la imagen escalada
+  ImageSOA inicializarImagenEscalada(int newWidth, int newHeight) {
+    ImageSOA imagenEscalada;
+    imagenEscalada.width = newWidth;
+    imagenEscalada.height = newHeight;
+    imagenEscalada.redChannel.resize(static_cast<size_t>(newWidth) * static_cast<size_t>(newHeight));
+    imagenEscalada.greenChannel.resize(static_cast<size_t>(newWidth) * static_cast<size_t>(newHeight));
+    imagenEscalada.blueChannel.resize(static_cast<size_t>(newWidth) * static_cast<size_t>(newHeight));
+    return imagenEscalada;
+  }
+}
+
+//performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
+// Función principal para realizar la operación de resize
+void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
+  std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+  std::cout << "Archivo de entrada: " << inputFile << "\n";
+  std::cout << "Archivo de salida: " << outputFile << "\n";
+
+  try {
+    // Validar los valores de las dimensiones
+    validateValue(newWidth);
+    validateValue(newHeight);
+
+    // Leer la imagen de entrada en formato PPM
+    PPMImage inputImage{};
+    if (!leerImagenPPM(inputFile, inputImage)) {
+      throw std::runtime_error("Error al leer el archivo de entrada");
+    }
+
+    // Convertir la imagen PPM a formato SOA
+    const ImageSOA imageSOA = leerImagenSOA(inputImage);
+    //const DimensionesImagen dimensionesOriginal = {.width = imageSOA.width, .height = imageSOA.height};
+
+    // Inicializar la imagen escalada
+    ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(newWidth, newHeight);
+
+    // Escalar la imagen
+    escalarImagen(imageSOA, imagenEscaladaSOA);
+
+    // Convertir la imagen escalada a formato PPM para guardarla
+    const PPMImage outputImage = convertirSOAAImagePPM(imagenEscaladaSOA);
+
+    // Guardar la imagen en el archivo de salida
+    if (!escribirImagenPPM(outputFile, outputImage)) {
+      throw std::runtime_error("Error al guardar el archivo de salida");
+    }
+
+  } catch (const std::exception& e) {
+    std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
+    throw;
+  }
+}

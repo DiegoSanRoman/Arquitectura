@@ -162,7 +162,7 @@ namespace {
 
 //int main(int argc, char* argv[]) {
 void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
-    std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+    std::cout << "Realizando la operación de resize en imgaos con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
     std::cout << "Archivo de entrada: " << inputFile << "\n";
     std::cout << "Archivo de salida: " << outputFile << "\n";
 
