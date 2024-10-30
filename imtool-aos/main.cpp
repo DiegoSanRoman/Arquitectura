@@ -1,44 +1,30 @@
-#include "../common/progargs.hpp"
-/*#include "../imgaos/maxlevel.hpp"*/
-#include "../common/binario.hpp"
-#include "../imgaos/cutfreq.hpp"
-#include "../imgaos/resize.hpp"
-#include <iostream>
-#include <exception>
-#include <stdexcept>
-#include <string>
+// File: imtool-aos/main.cpp
+#include "../common/progargs.hpp"           // Para ProgramArgs
+#include "../imgaos/maxlevel.hpp"           // Para performMaxLevelOperation
+#include "../common/binario.hpp"            // Para leerImagenPPM, escribirImagenPPM
+#include "../imgaos/cutfreq.hpp"            // Para cutfreq
+#include "../imgaos/resize.hpp"             // Para performResizeOperation
+#include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
+#include <iostream>                         // Para std::cout, std::cerr
+#include <exception>                        // Para std::exception
+#include <stdexcept>                        // Para std::invalid_argument
+#include <string>                           // Para std::string
 
 namespace {
-  /*
-  constexpr int EXPECTED_ARGS_MAXLEVEL = 5;
-  constexpr int MAX_COLOR_VALUE = 65535;*/
-/*
-  void validateMaxlevelParams(const ProgramArgs& args) {
-    if (args.getAdditionalParams().size() != 1) {
-      throw std::invalid_argument("El número de argumentos para maxlevel debe ser exactamente " +
-                                std::to_string(EXPECTED_ARGS_MAXLEVEL - 3));
-    }
+  using namespace common;
 
-    const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
-    if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
-      throw std::invalid_argument("El nivel máximo debe estar entre 0 y " +
-                                std::to_string(MAX_COLOR_VALUE));
-    }
-  }
-
+  // Función para validar parámetros de la operación "maxlevel"
   void processMaxlevel(const ProgramArgs& args) {
     validateMaxlevelParams(args);
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
-*/
 
-  // Nueva función para validar parámetros de la operación "resize"
+  // Función para validar parámetros de la operación "resize"
   void validateResizeParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 2) {
       throw std::invalid_argument("Invalid number of extra arguments for resize: " +
-                                  std::to_string(args.getAdditionalParams().size()+3));
-      // +3 porque estamos quitando los 3 primeros parámetros (imtool, archivo_fuente, arhivo salida)
+                                  std::to_string(args.getAdditionalParams().size() + 3));
     }
 
     const int newWidth = std::stoi(args.getAdditionalParams()[0]);
@@ -59,7 +45,6 @@ namespace {
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
 
-
   bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
     if (args.getAdditionalParams().empty()) {
       std::cerr << "Error: Se requiere el número de colores a eliminar.\n";
@@ -79,7 +64,7 @@ namespace {
   }
 
   void ejecutarCutfreq(PPMImage& image, int number) {
-   cutfreq(image, number);
+    cutfreq(image, number);
   }
 }
 
@@ -93,13 +78,11 @@ int main(int argc, char* argv[]) {
     }
 
     if (args.getOperation() == "maxlevel") {
-      /*processMaxlevel(args);*/
+      processMaxlevel(args);
     }
-
     else if (args.getOperation() == "resize") {
       processResize(args);
     }
-
     else if (args.getOperation() == "cutfreq") {
       int number = 0;
       if (!validarParametrosCutfreq(args, number)) {
