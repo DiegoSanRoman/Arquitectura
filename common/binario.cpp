@@ -1,9 +1,13 @@
 // File: common/binario.cpp
 #include "binario.hpp"
+
+#include <bit>
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <span>
+#include <vector>
+#include <ostream>
+#include <istream>
 
 namespace {
     constexpr std::streamsize MAX_HEADER_SIZE = 256;
@@ -132,6 +136,21 @@ namespace {
                file.write(std::bit_cast<const char*>(image.greenChannel.data()), static_cast<std::streamsize>(totalBytes)).good() &&
                file.write(std::bit_cast<const char*>(image.blueChannel.data()), static_cast<std::streamsize>(totalBytes)).good();
     }
+
+    // Función genérica para escribir un solo valor en binario
+    template <typename T>
+    void write_binary(std::ostream& output, const T& value) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        output.write(reinterpret_cast<const char*>(&value), sizeof(value));
+      }
+
+    // Función genérica para escribir un array de valores en binario
+    template <typename T>
+    void write_binary_array(std::ostream& output, const std::vector<T>& values) {
+        for (const auto& value : values) {
+          write_binary(output, value);
+        }
+      }
 }
 
 bool leerImagenPPM(const std::string& filePath, PPMImage& image) {

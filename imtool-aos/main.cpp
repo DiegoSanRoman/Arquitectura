@@ -1,10 +1,12 @@
 // File: imtool-aos/main.cpp
 #include "../common/progargs.hpp"           // Para ProgramArgs
 #include "../imgaos/maxlevel.hpp"           // Para performMaxLevelOperation
-#include "../common/binario.hpp"            // Para leerImagenPPM, escribirImagenPPM
+#include "../common/binario.hpp"            // Para leerImagenPPM, escribirImagenPPM, info
 #include "../imgaos/cutfreq.hpp"            // Para cutfreq
 #include "../imgaos/resize.hpp"             // Para performResizeOperation
 #include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
+#include "../common/info.hpp"               // Para info
+#include "../imgaos/compress.hpp"           // Para compress
 #include <iostream>                         // Para std::cout, std::cerr
 #include <exception>                        // Para std::exception
 #include <stdexcept>                        // Para std::invalid_argument
@@ -63,11 +65,36 @@ namespace {
     return true;
   }
 
-  void ejecutarCutfreq(PPMImage& image, int number) {
+  int processCutFreq(const ProgramArgs& args) {
+    int number = 0;
+    if (!validarParametrosCutfreq(args, number)) {
+      return -1;
+    }
+    PPMImage image;
     cutfreq(image, number);
+    if (!escribirImagenPPM(args.getOutputFile(), image)) {
+      std::cerr << "Error al escribir la imagen de salida.\n";
+      return -1;
+    }
+    return 0;
+  }
+
+  void processInfo(const ProgramArgs& args) {
+    info(args.getInputFile());
+  }
+
+  void processCompress(const ProgramArgs& args) {
+    CompressionPaths const paths = {.inputImagePath=args.getInputFile(), .outputImagePath=args.getOutputFile()};
+    if (!args.getAdditionalParams().empty()) {
+      std::cerr << "Error: Invalid extra arguments for compress.\n";
+      throw std::invalid_argument("Número incorrecto de argumentos para 'compress'");
+    }
+    if (compress(paths) != 0) {
+      std::cerr << "Error en la compresión de la imagen.\n";
+      throw std::runtime_error("Fallo en la operación 'compress'");
+    }
   }
 }
-
 int main(int argc, char* argv[]) {
   try {
     const ProgramArgs args(argc, argv);
@@ -84,15 +111,13 @@ int main(int argc, char* argv[]) {
       processResize(args);
     }
     else if (args.getOperation() == "cutfreq") {
-      int number = 0;
-      if (!validarParametrosCutfreq(args, number)) {
-        return -1;
-      }
-      ejecutarCutfreq(image, number);
-      if (!escribirImagenPPM(args.getOutputFile(), image)) {
-        std::cerr << "Error al escribir la imagen de salida.\n";
-        return -1;
-      }
+      processCutFreq(args);
+    }
+    else if (args.getOperation() == "info") {
+      processInfo(args);
+    }
+    else if (args.getOperation() == "compress") {
+      processCompress(args);
     }
     else {
       throw std::invalid_argument("Operación no válida");

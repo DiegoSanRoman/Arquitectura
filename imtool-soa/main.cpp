@@ -1,9 +1,11 @@
 // File: imtool-soa/main.cpp
 #include "../common/progargs.hpp"           // Para ProgramArgs
 #include "../imgsoa/maxlevel.hpp"           // Para performMaxLevelOperation
-#include "../imgsoa/resize.hpp"           // Para performResizeOperation
+#include "../imgsoa/resize.hpp"             // Para performResizeOperation
 #include "../common/binario.hpp"            // Para leerImagenPPMSoA, escribirImagenPPMSoA
 #include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
+#include "../common/info.hpp"               // Para processInfo
+#include "../imgsoa/compress.hpp"           // Para processCompress
 #include <iostream>                         // Para std::cout, std::cerr
 #include <exception>                        // Para std::exception
 #include <stdexcept>                        // Para std::invalid_argument
@@ -44,6 +46,20 @@ namespace {
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
 
+  void processInfo(const ProgramArgs& args) {
+    info(args.getInputFile());
+  }
+
+  void processCompress(const ProgramArgs& args) {
+    if (!args.getAdditionalParams().empty()) {
+      std::cerr << "Error: Invalid extra arguments for compress.\n";
+      throw std::invalid_argument("Número incorrecto de argumentos para 'compress'");
+    }
+    if (compress(args.getInputFile(), args.getOutputFile()) != 0) {
+      std::cerr << "Error en la compresión de la imagen.\n";
+      throw std::runtime_error("Fallo en la operación 'compress'");
+    }
+  }
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -60,6 +76,12 @@ int main(int argc, char* argv[]) {
     }
     else if (args.getOperation() == "resize") {
       processResize(args);
+    }
+    else if (args.getOperation() == "info") {
+      processInfo(args);
+    }
+    else if (args.getOperation() == "compress") {
+      processCompress(args);
     }
     else {
       throw std::invalid_argument("Operación no válida");

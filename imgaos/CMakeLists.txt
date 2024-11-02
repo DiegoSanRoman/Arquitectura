@@ -7,6 +7,8 @@ add_library(imgaos
         maxlevel.cpp
         resize.hpp
         resize.cpp
+        compress.cpp
+        compress.hpp
 )
 # Use this line only if you have dependencies from this library to GSL
 target_link_libraries (imgaos PRIVATE common Microsoft.GSL::GSL)

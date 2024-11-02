@@ -5,6 +5,8 @@ add_library(common
         binario.hpp
         process_functions.hpp
         process_functions.cpp
+        info.cpp
+        info.hpp
 )
 # Use this line only if you have dependencies from this library to GSL
 target_link_libraries (common PRIVATE Microsoft.GSL::GSL)
