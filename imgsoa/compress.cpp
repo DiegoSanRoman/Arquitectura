@@ -1,5 +1,5 @@
 // File: imgsoa/compress.cpp
-
+/*
 #include "compress.hpp"
 #include "../common/binario.hpp"            // Para leerImagenPPMSoA y escribirImagenPPMSoA
 #include <iostream>
@@ -53,3 +53,4 @@ namespace common {
   }
 
 }
+*/

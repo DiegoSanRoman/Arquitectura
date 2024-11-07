@@ -52,8 +52,8 @@ namespace {
   void writeColorComponent(std::vector<uint8_t>& channel, std::size_t index, unsigned int value, bool is16Bit) {
     if (is16Bit) {
       const std::size_t idx = index * 2;
-      channel[idx] = static_cast<uint8_t>(value & BYTE_MASK);
-      channel[idx + 1] = static_cast<uint8_t>(value >> BITS_PER_BYTE);
+      channel[idx] = static_cast<uint8_t>(value >> BITS_PER_BYTE);
+      channel[idx + 1] = static_cast<uint8_t>(value & BYTE_MASK);
     } else {
       channel[index] = static_cast<uint8_t>(value);
     }
