@@ -49,18 +49,18 @@ namespace {
   void processInfo(const ProgramArgs& args) {
     info(args.getInputFile());
   }
-  /*
+
   void processCompress(const ProgramArgs& args) {
+    CompressionPaths const paths = {.inputImagePath=args.getInputFile(), .outputImagePath=args.getOutputFile()};
     if (!args.getAdditionalParams().empty()) {
       std::cerr << "Error: Invalid extra arguments for compress.\n";
       throw std::invalid_argument("Número incorrecto de argumentos para 'compress'");
     }
-    if (compress(args.getInputFile(), args.getOutputFile()) != 0) {
+    if (compress(paths) != 0) {
       std::cerr << "Error en la compresión de la imagen.\n";
       throw std::runtime_error("Fallo en la operación 'compress'");
     }
   }
-  */
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -81,11 +81,9 @@ int main(int argc, char* argv[]) {
     else if (args.getOperation() == "info") {
       processInfo(args);
     }
-    /*
     else if (args.getOperation() == "compress") {
       processCompress(args);
     }
-    */
     else {
       throw std::invalid_argument("Operación no válida");
     }
