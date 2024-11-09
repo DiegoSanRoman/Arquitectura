@@ -1,4 +1,3 @@
-// File: imgsoa/maxlevel.cpp
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -52,8 +51,8 @@ namespace {
   void writeColorComponent(std::vector<uint8_t>& channel, std::size_t index, unsigned int value, bool is16Bit) {
     if (is16Bit) {
       const std::size_t idx = index * 2;
-      channel[idx] = static_cast<uint8_t>(value >> BITS_PER_BYTE);
-      channel[idx + 1] = static_cast<uint8_t>(value & BYTE_MASK);
+      channel[idx] = static_cast<uint8_t>(value & BYTE_MASK);
+      channel[idx + 1] = static_cast<uint8_t>(value >> BITS_PER_BYTE);
     } else {
       channel[index] = static_cast<uint8_t>(value);
     }
@@ -103,28 +102,24 @@ void performMaxLevelOperation(const std::string& inputFile, const std::string& o
             << "Archivo de entrada: " << inputFile << "\n"
             << "Archivo de salida: " << outputFile << "\n";
 
-  try {
-    // Validar el nuevo valor máximo
-    validateMaxValue(newMaxValue);
+  // Validar el nuevo valor máximo antes de cualquier otra operación
+  validateMaxValue(newMaxValue);
 
-    // Leer la imagen de entrada
-    PPMImageSoA inputImage{};
-    if (!leerImagenPPMSoA(inputFile, inputImage)) {
-      return;
-    }
+  // El resto del código se ejecuta solo si la validación es exitosa
+  PPMImageSoA inputImage{};
+  if (!leerImagenPPMSoA(inputFile, inputImage)) {
+    throw std::runtime_error("Error al leer la imagen de entrada");
+  }
 
-    // Calcular los parámetros de procesamiento
-    const PixelProcessingParams params = calculateProcessingParams(inputImage, newMaxValue);
+  // Calcular los parámetros de procesamiento
+  const PixelProcessingParams params = calculateProcessingParams(inputImage, newMaxValue);
 
-    // Procesar los datos de píxeles
-    PPMImageSoA outputImage{};
-    processPixelData(inputImage, outputImage, params);
+  // Procesar los datos de píxeles
+  PPMImageSoA outputImage{};
+  processPixelData(inputImage, outputImage, params);
 
-    // Escribir la imagen de salida
-    if (!escribirImagenPPMSoA(outputFile, outputImage)) {
-      std::cerr << "Error al escribir la imagen de salida.\n";
-    }
-  } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << "\n";
+  // Escribir la imagen de salida
+  if (!escribirImagenPPMSoA(outputFile, outputImage)) {
+    throw std::runtime_error("Error al escribir la imagen de salida");
   }
 }
