@@ -68,29 +68,41 @@ namespace {
         }
         return true;
     }
+  // Leer datos de píxeles en formato SOA
+  bool leerDatosPixeles(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
+      const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
+      const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
-    bool leerDatosPixeles(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
-        const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
-        const std::size_t totalBytes = totalPixels * static_cast<std::size_t>(bytesPerComponent);
+      // Redimensionar los canales RGB
+      image.redChannel.resize(totalPixels);
+      image.greenChannel.resize(totalPixels);
+      image.blueChannel.resize(totalPixels);
 
-        image.redChannel.resize(totalBytes);
-        image.greenChannel.resize(totalBytes);
-        image.blueChannel.resize(totalBytes);
+      // Crear un búfer intermedio para leer cada componente de color
+      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
 
-        if (!file.read(std::bit_cast<char*>(image.redChannel.data()), static_cast<std::streamsize>(totalBytes)) ||
-            !file.read(std::bit_cast<char*>(image.greenChannel.data()), static_cast<std::streamsize>(totalBytes)) ||
-            !file.read(std::bit_cast<char*>(image.blueChannel.data()), static_cast<std::streamsize>(totalBytes))) {
-            std::cerr << "Error al leer los datos de la imagen.\n";
-            return false;
-        }
+      if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
+        std::cerr << "Error al leer los datos de la imagen.\n";
+        return false;
+      }
 
-        if (bytesPerComponent == 2) {
-            swapBytes(image.redChannel);
-            swapBytes(image.greenChannel);
-            swapBytes(image.blueChannel);
-        }
-        return true;
+      // Copiar los datos desde el búfer intermedio a los canales RGB
+      for (std::size_t i = 0; i < totalPixels; ++i) {
+        image.redChannel[i] = static_cast<uint8_t>(buffer[i * COMPONENTS_PER_PIXEL]);
+        image.greenChannel[i] = static_cast<uint8_t>(buffer[(i * COMPONENTS_PER_PIXEL) + 1]);
+        image.blueChannel[i] = static_cast<uint8_t>(buffer[(i * COMPONENTS_PER_PIXEL) + 2]);
+      }
+
+      // Si es de 16 bits, hacer el intercambio de bytes
+      if (bytesPerComponent == 2) {
+        swapBytes(image.redChannel);
+        swapBytes(image.greenChannel);
+        swapBytes(image.blueChannel);
+      }
+
+      return true;
     }
+
 
     bool escribirEncabezadoPPM(std::ofstream& file, const PPMImage& image) {
         file << "P6\n" << image.width << " " << image.height << "\n" << image.maxValue << "\n";
@@ -116,25 +128,44 @@ namespace {
                          static_cast<std::streamsize>(totalBytes)).good();
     }
 
-    bool escribirDatosPixeles(std::ofstream& file, const PPMImageSoA& image, int bytesPerComponent) {
-        const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
-        const std::size_t totalBytes = totalPixels * static_cast<std::size_t>(bytesPerComponent);
+  // Escribir datos de píxeles en formato SOA sin reinterpret_cast
+  bool escribirDatosPixeles(std::ofstream& file, const PPMImageSoA& image, int bytesPerComponent) {
+      const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
+      const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
-        if (bytesPerComponent == 2) {
-            std::vector<unsigned char> tempRed = image.redChannel;
-            std::vector<unsigned char> tempGreen = image.greenChannel;
-            std::vector<unsigned char> tempBlue = image.blueChannel;
-            swapBytes(tempRed);
-            swapBytes(tempGreen);
-            swapBytes(tempBlue);
-            return file.write(std::bit_cast<const char*>(tempRed.data()), static_cast<std::streamsize>(totalBytes)).good() &&
-                   file.write(std::bit_cast<const char*>(tempGreen.data()), static_cast<std::streamsize>(totalBytes)).good() &&
-                   file.write(std::bit_cast<const char*>(tempBlue.data()), static_cast<std::streamsize>(totalBytes)).good();
+      // Crear un búfer intermedio para almacenar los datos RGB en formato binario
+      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
+
+      // Copiar los datos de los canales RGB al búfer intermedio
+      for (std::size_t i = 0; i < totalPixels; ++i) {
+        buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(image.redChannel[i]);
+        buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(image.greenChannel[i]);
+        buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(image.blueChannel[i]);
+      }
+
+      // Si es de 16 bits, hacer el intercambio de bytes en el búfer antes de escribir
+      if (bytesPerComponent == 2) {
+        std::vector<unsigned char> tempRed = image.redChannel;
+        std::vector<unsigned char> tempGreen = image.greenChannel;
+        std::vector<unsigned char> tempBlue = image.blueChannel;
+        swapBytes(tempRed);
+        swapBytes(tempGreen);
+        swapBytes(tempBlue);
+
+        for (std::size_t i = 0; i < totalPixels; ++i) {
+          buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(tempRed[i]);
+          buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(tempGreen[i]);
+          buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(tempBlue[i]);
         }
+      }
 
-        return file.write(std::bit_cast<const char*>(image.redChannel.data()), static_cast<std::streamsize>(totalBytes)).good() &&
-               file.write(std::bit_cast<const char*>(image.greenChannel.data()), static_cast<std::streamsize>(totalBytes)).good() &&
-               file.write(std::bit_cast<const char*>(image.blueChannel.data()), static_cast<std::streamsize>(totalBytes)).good();
+      // Escribir el búfer intermedio en el archivo
+      if (!file.write(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
+        std::cerr << "Error al escribir los datos de la imagen.\n";
+        return false;
+      }
+
+      return true;
     }
 
     // Función genérica para escribir un solo valor en binario

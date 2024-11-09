@@ -23,7 +23,7 @@ struct NeighborSearchData {
 const int GRID_SHIFT_RED = 8;
 const int GRID_SHIFT_GREEN = 4;
 const int GRID_SIZE = 512; // Debes definir el valor adecuado
-const int GRID_STEP = 512; // Debes definir el valor adecuado
+const int GRID_STEP = 16; // Debes definir el valor adecuado
 const uint32_t SHIFT_RED = 16; // Debes definir el valor adecuado
 const uint32_t SHIFT_GREEN = 8; // Debes definir el valor adecuado
 const uint32_t MASK = 0xFF; // Máscara para extraer componentes de color
