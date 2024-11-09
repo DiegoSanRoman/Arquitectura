@@ -1,4 +1,3 @@
-// File: imgaos/maxlevel.cpp
 #include "maxlevel.hpp"
 #include "../common/binario.hpp"
 #include <iostream>
@@ -8,6 +7,7 @@
 #include <exception>
 #include <cstddef>
 #include <algorithm>
+#include <vector>
 
 namespace {
     constexpr int BITS_PER_BYTE = 8;
