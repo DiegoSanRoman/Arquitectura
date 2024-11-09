@@ -6,6 +6,7 @@
 #include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
 #include "../common/info.hpp"               // Para processInfo
 #include "../imgsoa/compress.hpp"           // Para processCompress
+#include "../imgsoa/cutfreq.hpp"            // Para cutfreq (SOA)
 #include <iostream>                         // Para std::cout, std::cerr
 #include <exception>                        // Para std::exception
 #include <stdexcept>                        // Para std::invalid_argument
@@ -61,6 +62,26 @@ namespace {
       throw std::runtime_error("Fallo en la operación 'compress'");
     }
   }
+
+  // Nueva función para procesar la operación "cutfreq" en SOA
+  void processCutfreq(const ProgramArgs& args) {
+    if (args.getAdditionalParams().size() != 1) {
+      throw std::invalid_argument("Invalid number of arguments for cutfreq.");
+    }
+
+    const int number = std::stoi(args.getAdditionalParams()[0]);
+    PPMImageSoA image;
+
+    if (!leerImagenPPMSoA(args.getInputFile(), image)) {
+      throw std::runtime_error("Error al leer la imagen en formato SOA.");
+    }
+
+    cutfreq(image, number);  // Procesa la frecuencia de corte en SOA
+
+    if (!escribirImagenPPMSoA(args.getOutputFile(), image)) {
+      throw std::runtime_error("Error al escribir la imagen en formato SOA.");
+    }
+  }
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -83,6 +104,9 @@ int main(int argc, char* argv[]) {
     }
     else if (args.getOperation() == "compress") {
       processCompress(args);
+    }
+    else if (args.getOperation() == "cutfreq") {  // Añadimos la operación cutfreq
+      processCutfreq(args);
     }
     else {
       throw std::invalid_argument("Operación no válida");

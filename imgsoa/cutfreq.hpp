@@ -1,24 +1,39 @@
-//
-// Created by alba on 9/10/24.
-//
-
+// cutfreq.hpp
 #ifndef CUTFREQ_HPP
 #define CUTFREQ_HPP
 
-#include <vector>
-#include <tuple>
+#include "../common/binario.hpp"
+#include <limits>
 
-// Estructura para representar la imagen en SOA (Structure of Arrays)
-struct ImageSOA {
-  std::vector<int> red_channel;
-  std::vector<int> green_channel;
-  std::vector<int> blue_channel;
+// Supongamos que las constantes están definidas de la siguiente manera:
+const int GRID_SHIFT_RED = 8;
+const int GRID_SHIFT_GREEN = 4;
+const int GRID_SIZE = 16; // Ajuste según el tamaño deseado
+const int GRID_STEP = 16; // Ajuste según el tamaño deseado
+const uint32_t SHIFT_RED = 16;
+const uint32_t SHIFT_GREEN = 8;
+const uint32_t MASK = 0xFF;
+
+// Estructuras proporcionadas
+struct ColorIndices {
+  int redIndex = 0;
+  int greenIndex = 0;
+  int blueIndex = 0;
 };
 
-// Declaraciones de las funciones para SOA
-void cutfreq(ImageSOA& image, int n);
-double euclideanDistance(const ImageSOA& image, size_t index1, size_t index2);
-size_t findClosestColor(const ImageSOA& image, size_t colorIndex, const std::vector<size_t>& remainingIndices);
-bool colorCompare(const ImageSOA& image, size_t index1, size_t index2);
+struct NeighborSearchData {
+  uint32_t colorToRemove = 0;
+  uint32_t closestColor = 0;
+  double minDistance = std::numeric_limits<double>::max();
+  bool found = false;
+};
 
-#endif // CUTFREQ_HPP
+struct Color {
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+};
+
+
+void cutfreq(PPMImageSoA& image, int n);
+#endif
