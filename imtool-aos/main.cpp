@@ -47,6 +47,7 @@ namespace {
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
 
+
   bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
     if (args.getAdditionalParams().empty()) {
       std::cerr << "Error: Se requiere el número de colores a eliminar.\n";
@@ -70,12 +71,23 @@ namespace {
     if (!validarParametrosCutfreq(args, number)) {
       return -1;
     }
+
     PPMImage image;
+    // Leer la imagen de entrada
+    if (!leerImagenPPM(args.getInputFile(), image)) {
+      std::cerr << "Error al leer la imagen de entrada.\n";
+      return -1;
+    }
+
+    // Aplicar la operación cutfreq
     cutfreq(image, number);
+
+    // Escribir la imagen de salida
     if (!escribirImagenPPM(args.getOutputFile(), image)) {
       std::cerr << "Error al escribir la imagen de salida.\n";
       return -1;
     }
+
     return 0;
   }
 
