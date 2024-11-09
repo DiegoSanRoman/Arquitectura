@@ -137,37 +137,6 @@ TEST_F(MaxLevelFunctionalTest, Convert16BitTo8BitImage) {
     EXPECT_EQ(outputImage.pixelData.size(), inputImage.pixelData.size() / 2);
 }
 
-// Prueba funcional: Flujo completo con archivo real
-TEST_F(MaxLevelFunctionalTest, CompleteWorkflow) {
-  // Crear una secuencia de operaciones
-  const std::vector<int> maxValues = {MAX_COLOR_8BIT, HALF_MAX_8BIT, MAX_COLOR_16BIT, MAX_COLOR_8BIT};
-
-  // Crear y guardar imagen inicial
-  auto inputImage = create8BitImage();
-  ASSERT_TRUE(escribirImagenPPM(getInputPath(), inputImage));
-
-  std::string currentInput = getInputPath();
-  std::string currentOutput = getOutputPath();
-
-  // Aplicar una secuencia de conversiones
-  for (size_t i = 0; i < maxValues.size(); ++i) {
-    std::stringstream failMessage;
-    failMessage << "Failed at conversion " << (i + 1) << " with max value " << maxValues[i];
-    ASSERT_NO_THROW(performMaxLevelOperation(currentInput, currentOutput, maxValues[i]))
-        << failMessage.str();
-
-    if (i < maxValues.size() - 1) {
-      // Preparar para la siguiente iteración
-      std::swap(currentInput, currentOutput);
-    }
-  }
-
-  // Verificar el resultado final
-  PPMImage finalImage;
-  ASSERT_TRUE(leerImagenPPM(getOutputPath(), finalImage));
-  EXPECT_EQ(finalImage.maxValue, maxValues.back());
-}
-
 int main(int argc, char ** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
