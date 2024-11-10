@@ -1,6 +1,7 @@
 # File: ftest-aos/CMakeLists.txt
 add_executable(ftest-aos
-        maxlevel-ftest.cpp)
+        maxlevel-ftest.cpp
+        compress-ftest.cpp)
 
 target_link_libraries(ftest-aos
         PRIVATE
