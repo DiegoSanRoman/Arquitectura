@@ -48,4 +48,7 @@ bool escribirImagenPPM(const std::string& filePath, const PPMImage& image);
 bool leerImagenPPMSoA(const std::string& filePath, PPMImageSoA& image);
 bool escribirImagenPPMSoA(const std::string& filePath, const PPMImageSoA& image);
 
+// Funciones específicas para tests CPPM
+bool leerImagenCPPM(const std::string& filePath, PPMImage& image);
+
 #endif // BINARIO_HPP
