@@ -8,11 +8,14 @@
 #include <vector>
 #include <ostream>
 #include <istream>
+#include <cstring>
 
 namespace {
     constexpr std::streamsize MAX_HEADER_SIZE = 256;
     constexpr int MAX_8BIT_VALUE = 255;
     constexpr std::size_t COMPONENTS_PER_PIXEL = 3U;
+    constexpr int BYTE_COLOR_LIMIT = 256;
+    constexpr int SHORT_COLOR_LIMIT = 65536;
 
     bool leerEncabezadoPPM(std::ifstream& file, PPMImage& image) {
         std::string magicNumber;
@@ -168,6 +171,57 @@ namespace {
       return true;
     }
 
+  bool leerEncabezadoCPPM(std::ifstream& file, PPMImage& image, size_t& uniqueColorCount) {
+      std::string magicNumber;
+      file >> magicNumber;
+      if (magicNumber != "C6") {
+          std::cerr << "Formato incorrecto: se esperaba 'C6'.\n";
+          return false;
+      }
+
+      file >> image.width >> image.height >> image.maxValue >> uniqueColorCount;
+      file.ignore(MAX_HEADER_SIZE, '\n');
+      return true;
+  }
+
+  bool leerDatosTablaColores(std::ifstream& file, PPMImage& image, size_t uniqueColorCount) {
+      const size_t colorSize = (image.maxValue <= MAX_8BIT_VALUE) ? 3U : 6U;
+      image.pixelData.resize(uniqueColorCount * colorSize);
+
+      // Leer datos binarios de colores usando std::memcpy en lugar de reinterpret_cast
+      std::vector<char> buffer(uniqueColorCount * colorSize);
+      if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
+          std::cerr << "Error al leer la tabla de colores.\n";
+          return false;
+      }
+      std::memcpy(image.pixelData.data(), buffer.data(), buffer.size());
+      return true;
+  }
+
+  bool leerIndicesPixeles(std::ifstream& file, PPMImage& image, size_t uniqueColorCount) {
+    int bytesPerPixel = 0;
+    if (uniqueColorCount <= BYTE_COLOR_LIMIT) {
+      bytesPerPixel = 1;
+    } else if (uniqueColorCount <= SHORT_COLOR_LIMIT) {
+      bytesPerPixel = 2;
+    } else {
+      bytesPerPixel = 4;
+    }
+
+      const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
+      std::vector<uint32_t> pixelIndices(totalPixels);
+
+      std::vector<char> buffer(static_cast<std::size_t>(bytesPerPixel));
+      for (std::size_t i = 0; i < totalPixels; ++i) {
+          if (!file.read(buffer.data(), bytesPerPixel)) {
+              std::cerr << "Error al leer índices de píxeles.\n";
+              return false;
+          }
+      std::memcpy(&pixelIndices[i], buffer.data(), static_cast<std::size_t>(bytesPerPixel));
+      }
+      return true;
+  }
+
     // Función genérica para escribir un solo valor en binario
     template <typename T>
     void write_binary(std::ostream& output, const T& value) {
@@ -276,4 +330,29 @@ bool escribirImagenPPMSoA(const std::string& filePath, const PPMImageSoA& image)
         std::cerr << "Error al escribir imagen PPM: " << e.what() << '\n';
         return false;
     }
+}
+
+bool leerImagenCPPM(const std::string& filePath, PPMImage& image) {
+  try {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+      std::cerr << "Error al abrir el archivo para lectura: " << filePath << '\n';
+      return false;
+    }
+
+    size_t uniqueColorCount = 0;
+    if (!leerEncabezadoCPPM(file, image, uniqueColorCount)) {
+      return false;
+    }
+
+    if (!leerDatosTablaColores(file, image, uniqueColorCount)) {
+      return false;
+    }
+
+    return leerIndicesPixeles(file, image, uniqueColorCount);
+
+  } catch (const std::exception& e) {
+    std::cerr << "Error al leer imagen CPPM: " << e.what() << '\n';
+    return false;
+  }
 }

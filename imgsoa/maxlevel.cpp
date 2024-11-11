@@ -5,94 +5,115 @@
 #include "../common/binario.hpp"
 
 namespace {
-  // Constantes para el procesamiento de píxeles
-  constexpr int BITS_PER_BYTE = 8;                // Bits por byte
-  constexpr unsigned int BYTE_MASK = 0xFF;        // Máscara para un byte
-  constexpr int MAX_COLOR_8BIT = 255;             // Valor máximo para un color de 8 bits
-  constexpr int MAX_COLOR_16BIT = 65535;          // Valor máximo para un color de 16 bits
+  constexpr int BITS_PER_BYTE = 8;
+  constexpr unsigned int BYTE_MASK = 0xFF;
+  constexpr unsigned int MAX_COLOR_8BIT = 255U;
+  constexpr unsigned int MAX_COLOR_16BIT = 65535U;
 
-  // Parámetros para el procesamiento de píxeles
   struct PixelProcessingParams {
-    double scaleFactor;                         // Factor de escala
-    bool inputIs16Bit;                          // Si los valores de entrada son de 16 bits
-    bool outputIs16Bit;                         // Si los valores de salida son de 16 bits
-    std::size_t totalComponents;                // Total de componentes de píxeles
+    double scaleFactor;
+    bool inputIs16Bit;
+    bool outputIs16Bit;
+    std::size_t totalComponents;
+    int newMaxValue;
   };
 
-  // Función para validar el nuevo valor máximo
+  struct ScaleParams {
+    unsigned int value;
+    double scaleFactor;
+    unsigned int maxValue;
+  };
+
   void validateMaxValue(int newMaxValue) {
-    if (newMaxValue <= 0 || newMaxValue > MAX_COLOR_16BIT) {
+    if (newMaxValue <= 0 || newMaxValue > static_cast<int>(MAX_COLOR_16BIT)) {
       throw std::invalid_argument("Nuevo valor máximo fuera de rango válido (1-65535)");
     }
   }
 
-  // Función para calcular los parámetros de procesamiento de píxeles
   PixelProcessingParams calculateProcessingParams(const PPMImageSoA& inputImage, int newMaxValue) {
     return {
         .scaleFactor = static_cast<double>(newMaxValue) / inputImage.maxValue,
-        .inputIs16Bit = inputImage.maxValue > MAX_COLOR_8BIT,
-        .outputIs16Bit = newMaxValue > MAX_COLOR_8BIT,
+        .inputIs16Bit = inputImage.maxValue > static_cast<int>(MAX_COLOR_8BIT),
+        .outputIs16Bit = newMaxValue > static_cast<int>(MAX_COLOR_8BIT),
         .totalComponents = static_cast<std::size_t>(inputImage.width) *
-                           static_cast<std::size_t>(inputImage.height)
+                           static_cast<std::size_t>(inputImage.height),
+        .newMaxValue = newMaxValue
     };
   }
 
-  // Función para leer un componente de color
-  unsigned int readColorComponent(const std::vector<uint8_t>& channel, std::size_t index, bool is16Bit) {
-    if (is16Bit) {
-      const std::size_t idx = index * 2;
-      return (static_cast<unsigned int>(channel[idx + 1]) << BITS_PER_BYTE) |
-             static_cast<unsigned int>(channel[idx]);
-    }
+  void initializeOutputImage(PPMImageSoA& outputImage, const PPMImageSoA& inputImage, const PixelProcessingParams& params) {
+    outputImage.width = inputImage.width;
+    outputImage.height = inputImage.height;
+    outputImage.maxValue = params.newMaxValue;
+
+    const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2U : 1U;
+    const std::size_t outputSize = params.totalComponents * outputBytesPerComponent;
+    outputImage.redChannel.resize(outputSize);
+    outputImage.greenChannel.resize(outputSize);
+    outputImage.blueChannel.resize(outputSize);
+  }
+
+  unsigned int scaleAndClampValue(const ScaleParams& params) {
+    const double scaled = params.value * params.scaleFactor;
+    const auto rounded = static_cast<unsigned int>(std::lround(scaled));
+    return std::min(rounded, params.maxValue);
+  }
+
+  void write8BitValue(std::vector<uint8_t>& channel, std::size_t index, unsigned int value) {
+    channel[index] = static_cast<uint8_t>(value);
+  }
+
+  void write16BitValue(unsigned int value, std::vector<uint8_t>& channel, std::size_t index) {
+    const std::size_t byteIndex = index * 2U;
+    channel[byteIndex] = static_cast<uint8_t>(value & BYTE_MASK);
+    channel[byteIndex + 1] = static_cast<uint8_t>((value >> BITS_PER_BYTE) & BYTE_MASK);
+  }
+
+  unsigned int read8BitValue(const std::vector<uint8_t>& channel, std::size_t index) {
     return static_cast<unsigned int>(channel[index]);
   }
 
-  // Función para escribir un componente de color
-  void writeColorComponent(std::vector<uint8_t>& channel, std::size_t index, unsigned int value, bool is16Bit) {
-    if (is16Bit) {
-      const std::size_t idx = index * 2;
-      channel[idx] = static_cast<uint8_t>(value & BYTE_MASK);
-      channel[idx + 1] = static_cast<uint8_t>(value >> BITS_PER_BYTE);
+  unsigned int read16BitValue(const std::vector<uint8_t>& channel, std::size_t index) {
+    const std::size_t byteIndex = index * 2U;
+    return (static_cast<unsigned int>(channel[byteIndex + 1]) << BITS_PER_BYTE) |
+           static_cast<unsigned int>(channel[byteIndex]);
+  }
+
+  void processPixelComponent(std::vector<uint8_t>& outputChannel,
+                             const std::vector<uint8_t>& inputChannel,
+                             std::size_t pixelIndex,
+                             const PixelProcessingParams& params) {
+    // Leer el valor de entrada
+    const auto inputValue = params.inputIs16Bit ?
+        read16BitValue(inputChannel, pixelIndex) :
+        read8BitValue(inputChannel, pixelIndex);
+
+    const auto maxValue = static_cast<unsigned int>(params.newMaxValue);
+
+    const ScaleParams scaleParams{
+        .value = inputValue,
+        .scaleFactor = params.scaleFactor,
+        .maxValue = maxValue
+    };
+
+    const auto scaledValue = scaleAndClampValue(scaleParams);
+
+    // Escribir el valor de salida
+    if (params.outputIs16Bit) {
+        write16BitValue(scaledValue, outputChannel, pixelIndex);
     } else {
-      channel[index] = static_cast<uint8_t>(value);
+        write8BitValue(outputChannel, pixelIndex, scaledValue);
     }
   }
 
-  // Función para procesar los datos de píxeles
-  void processPixelData(const PPMImageSoA& inputImage, PPMImageSoA& outputImage, const PixelProcessingParams& params) {
-    const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2 : 1;
-    const std::size_t totalPixels = params.totalComponents;
+  void processPixelData(const PPMImageSoA& inputImage, PPMImageSoA& outputImage,
+                        const PixelProcessingParams& params) {
+    initializeOutputImage(outputImage, inputImage, params);
 
-    outputImage.width = inputImage.width;
-    outputImage.height = inputImage.height;
-    outputImage.maxValue = static_cast<int>(params.scaleFactor * inputImage.maxValue);
-
-    outputImage.redChannel.resize(totalPixels * outputBytesPerComponent);
-    outputImage.greenChannel.resize(totalPixels * outputBytesPerComponent);
-    outputImage.blueChannel.resize(totalPixels * outputBytesPerComponent);
-
-    for (std::size_t i = 0; i < totalPixels; ++i) {
-      unsigned int redValue = readColorComponent(inputImage.redChannel, i, params.inputIs16Bit);
-      unsigned int greenValue = readColorComponent(inputImage.greenChannel, i, params.inputIs16Bit);
-      unsigned int blueValue = readColorComponent(inputImage.blueChannel, i, params.inputIs16Bit);
-
-      redValue = static_cast<unsigned int>(std::lround(redValue * params.scaleFactor));
-      greenValue = static_cast<unsigned int>(std::lround(greenValue * params.scaleFactor));
-      blueValue = static_cast<unsigned int>(std::lround(blueValue * params.scaleFactor));
-
-      if (params.outputIs16Bit) {
-        redValue = std::min(redValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
-        greenValue = std::min(greenValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
-        blueValue = std::min(blueValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
-      } else {
-        redValue = std::min(redValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
-        greenValue = std::min(greenValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
-        blueValue = std::min(blueValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
-      }
-
-      writeColorComponent(outputImage.redChannel, i, redValue, params.outputIs16Bit);
-      writeColorComponent(outputImage.greenChannel, i, greenValue, params.outputIs16Bit);
-      writeColorComponent(outputImage.blueChannel, i, blueValue, params.outputIs16Bit);
+    for (std::size_t i = 0; i < params.totalComponents; ++i) {
+      processPixelComponent(outputImage.redChannel, inputImage.redChannel, i, params);
+      processPixelComponent(outputImage.greenChannel, inputImage.greenChannel, i, params);
+      processPixelComponent(outputImage.blueChannel, inputImage.blueChannel, i, params);
     }
   }
 }
@@ -102,23 +123,18 @@ void performMaxLevelOperation(const std::string& inputFile, const std::string& o
             << "Archivo de entrada: " << inputFile << "\n"
             << "Archivo de salida: " << outputFile << "\n";
 
-  // Validar el nuevo valor máximo antes de cualquier otra operación
   validateMaxValue(newMaxValue);
 
-  // El resto del código se ejecuta solo si la validación es exitosa
   PPMImageSoA inputImage{};
   if (!leerImagenPPMSoA(inputFile, inputImage)) {
     throw std::runtime_error("Error al leer la imagen de entrada");
   }
 
-  // Calcular los parámetros de procesamiento
   const PixelProcessingParams params = calculateProcessingParams(inputImage, newMaxValue);
 
-  // Procesar los datos de píxeles
   PPMImageSoA outputImage{};
   processPixelData(inputImage, outputImage, params);
 
-  // Escribir la imagen de salida
   if (!escribirImagenPPMSoA(outputFile, outputImage)) {
     throw std::runtime_error("Error al escribir la imagen de salida");
   }
