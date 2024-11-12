@@ -1,4 +1,5 @@
-//cutfreq.cpp SOA
+// cutfreq.cpp SOA
+
 #include "../common/binario.hpp"
 #include "cutfreq.hpp"
 #include <cstdint>
@@ -7,195 +8,151 @@
 #include <unordered_set>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <limits>
 
-namespace {
+namespace { // Definimos funciones internas que serán visibles solo dentro de este archivo.
 
-// Calcular la frecuencia de colores en la imagen
+// Funciones internas para trabajar con la imagen
+
+// Calcular frecuencia de colores
+// Esta función calcula cuántas veces aparece cada color en la imagen.
 std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImageSoA& image) {
-    std::cout << "Calculando la frecuencia de los colores...\n";
     std::unordered_map<uint32_t, int> colorFrequency;
+    // Recorremos cada pixel de la imagen
     for (std::size_t i = 0; i < image.redChannel.size(); ++i) {
+        // Componemos un color combinando los valores de los canales rojo, verde y azul en un solo valor de 32 bits.
         const uint32_t color = (static_cast<uint32_t>(image.redChannel[i]) << SHIFT_RED) |
                                (static_cast<uint32_t>(image.greenChannel[i]) << SHIFT_GREEN) |
                                static_cast<uint32_t>(image.blueChannel[i]);
+        // Aumentamos la frecuencia del color encontrado
         colorFrequency[color]++;
     }
-    return colorFrequency;
+
+    return colorFrequency; // Devolvemos la frecuencia de cada color.
 }
 
 // Obtener colores menos frecuentes
-std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uint32_t, int>& colorFrequency, int number) {
-    std::cout << "Obteniendo los colores menos frecuentes...\n";
+// Esta función devuelve los colores menos frecuentes, hasta un límite dado por "n".
+std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uint32_t, int>& colorFrequency, int n) {
+    // Convertimos el mapa de frecuencias a una lista de pares para ordenar los colores según su frecuencia.
     std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
+
+    // Ordenamos la lista de colores por frecuencia de menor a mayor, y luego por canal para romper empates.
     std::ranges::sort(frequencyList, [](const auto& colorA, const auto& colorB) {
-        return colorA.second < colorB.second;
+        if (colorA.second != colorB.second) {
+            return colorA.second < colorB.second; // Ordenamos primero por frecuencia.
+        }
+        // Ordenar por azul, luego verde y luego rojo en caso de empate en frecuencia.
+        if ((colorA.first & MASK) != (colorB.first & MASK)) {
+            return (colorA.first & MASK) > (colorB.first & MASK);
+        }
+        if (((colorA.first >> SHIFT_GREEN) & MASK) != ((colorB.first >> SHIFT_GREEN) & MASK)) {
+            return ((colorA.first >> SHIFT_GREEN) & MASK) > ((colorB.first >> SHIFT_GREEN) & MASK);
+        }
+        return ((colorA.first >> SHIFT_RED) & MASK) > ((colorB.first >> SHIFT_RED) & MASK);
     });
 
+    // Tomamos los primeros "n" colores menos frecuentes.
     std::vector<uint32_t> colorsToRemove;
-    const std::size_t limit = std::min(static_cast<std::size_t>(number), frequencyList.size());
-    colorsToRemove.reserve(limit);
+    const std::size_t limit = static_cast<std::size_t>(std::min(n, static_cast<int>(frequencyList.size())));
+    colorsToRemove.reserve(limit); // Reservamos espacio para mejorar el rendimiento.
     for (std::size_t i = 0; i < limit; ++i) {
-        colorsToRemove.push_back(frequencyList[i].first);
+        colorsToRemove.push_back(frequencyList[i].first); // Guardamos los colores a eliminar.
     }
-    return colorsToRemove;
+
+    return colorsToRemove; // Devolvemos los colores que serán eliminados.
 }
 
-// Calcular la distancia euclidiana entre dos colores
-double calcularDistancia(uint32_t colorA, uint32_t colorB) {
-    const int redDiff = static_cast<int>((colorA >> SHIFT_RED) & MASK) - static_cast<int>((colorB >> SHIFT_RED) & MASK);
-    const int greenDiff = static_cast<int>((colorA >> SHIFT_GREEN) & MASK) - static_cast<int>((colorB >> SHIFT_GREEN) & MASK);
-    const int blueDiff = static_cast<int>(colorA & MASK) - static_cast<int>(colorB & MASK);
-    return ((redDiff * redDiff) + (greenDiff * greenDiff) + (blueDiff * blueDiff));
-}
+// Encontrar colores de reemplazo
+// Esta función encuentra un color para reemplazar cada uno de los colores menos frecuentes eliminados.
+std::unordered_map<uint32_t, uint32_t> encontrarColoresReemplazo(const std::unordered_set<uint32_t>& colorsToRemoveSet,
+                                                                 const std::vector<std::pair<uint32_t, int>>& frequencyList) {
+    std::unordered_map<uint32_t, uint32_t> replacementMap;
 
-// Obtener índices de cuadrícula
-GridIndices obtenerIndicesCuadricula(uint32_t color) {
-    return {
-        .redIndex = static_cast<int>((color >> SHIFT_RED) & MASK) / GRID_STEP,
-        .greenIndex = static_cast<int>((color >> SHIFT_GREEN) & MASK) / GRID_STEP,
-        .blueIndex = static_cast<int>(color & MASK) / GRID_STEP
-    };
-}
-
-// Procesar vecino y actualizar el color más cercano
-void procesarVecino(const std::unordered_map<int, std::vector<uint32_t>>& grid,
-                    const GridIndices& indices, uint32_t colorToRemove, ColorDistance& colorDist) {
-    const int neighborIndex = (indices.redIndex << GRID_SHIFT_RED) |
-                              (indices.greenIndex << GRID_SHIFT_GREEN) |
-                              indices.blueIndex;
-    auto iterator = grid.find(neighborIndex);
-    if (iterator != grid.end()) {
-        for (const auto& candidateColor : iterator->second) {
-            const double distancia = calcularDistancia(colorToRemove, candidateColor);
-            if (distancia < colorDist.minDistance) {
-                colorDist.minDistance = distancia;
-                colorDist.closestColor = candidateColor;
-                colorDist.found = true;
-            }
+    // Filtramos los colores candidatos para reemplazar (solo aquellos que no están en la lista de eliminados).
+    std::vector<uint32_t> candidateColors;
+    for (const auto& [candidateColor, _] : frequencyList) {
+        if (colorsToRemoveSet.find(candidateColor) == colorsToRemoveSet.end()) {
+            candidateColors.push_back(candidateColor); // Guardamos solo los colores que no han sido eliminados.
         }
     }
-}
 
-// Encontrar el color más cercano
-uint32_t encontrarColorCercano(const std::unordered_map<int, std::vector<uint32_t>>& grid,
-                               const GridIndices& indices, const uint32_t colorToRemove, bool& encontrado) {
-    ColorDistance colorDist{.closestColor = 0, .minDistance = std::numeric_limits<double>::max(), .found = false};
-    for (int dred = -1; dred <= 1; ++dred) {
-        const int red = indices.redIndex + dred;
-        if (red < 0 || red >= GRID_SIZE) {
-          continue;
-        }
-        for (int dgreen = -1; dgreen <= 1; ++dgreen) {
-            const int green = indices.greenIndex + dgreen;
-            if (green < 0 || green >= GRID_SIZE) {
-              continue;
-            }
-            for (int dblue = -1; dblue <= 1; ++dblue) {
-                const int blue = indices.blueIndex + dblue;
-                if (blue < 0 || blue >= GRID_SIZE) {
-                  continue;
-                }
-                procesarVecino(grid, {.redIndex = red, .greenIndex = green, .blueIndex = blue}, colorToRemove, colorDist);
+    // Buscamos el color más cercano de los candidatos para cada color eliminado.
+    for (const auto& colorToRemove : colorsToRemoveSet) {
+        uint32_t closestColor = 0;
+        double minDistance = std::numeric_limits<double>::max(); // Inicializamos la distancia más corta como un valor muy alto.
+
+        // Recorremos los candidatos y calculamos la distancia euclidiana en el espacio RGB.
+        for (const auto& candidateColor : candidateColors) {
+            const int redDiff = static_cast<int>((colorToRemove >> SHIFT_RED) & MASK) - static_cast<int>((candidateColor >> SHIFT_RED) & MASK);
+            const int greenDiff = static_cast<int>((colorToRemove >> SHIFT_GREEN) & MASK) - static_cast<int>((candidateColor >> SHIFT_GREEN) & MASK);
+            const int blueDiff = static_cast<int>(colorToRemove & MASK) - static_cast<int>(candidateColor & MASK);
+            const double distance = ((redDiff * redDiff) + (greenDiff * greenDiff) + (blueDiff * blueDiff));
+
+            // Si encontramos una distancia menor, actualizamos el color más cercano.
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestColor = candidateColor;
             }
         }
+        // Guardamos en el mapa de reemplazo el color que debe sustituir al eliminado.
+        replacementMap[colorToRemove] = closestColor;
     }
-    encontrado = colorDist.found;
-    return colorDist.closestColor;
+    return replacementMap; // Devolvemos el mapa de reemplazo de colores.
 }
 
 // Reemplazar colores en la imagen
+// Esta función reemplaza en la imagen todos los colores eliminados por sus respectivos reemplazos.
 void reemplazarColores(PPMImageSoA& image, const std::unordered_map<uint32_t, uint32_t>& replacementMap) {
-  std::cout << "Iniciando reemplazo de colores...\n";
+    for (std::size_t i = 0; i < image.redChannel.size(); ++i) {
+        // Reconstruimos el color original del pixel a partir de sus canales RGB.
+        const uint32_t color = (static_cast<uint32_t>(image.redChannel[i]) << SHIFT_RED) |
+                               (static_cast<uint32_t>(image.greenChannel[i]) << SHIFT_GREEN) |
+                               static_cast<uint32_t>(image.blueChannel[i]);
+        // Buscamos si el color actual necesita ser reemplazado.
+        auto iterator = replacementMap.find(color);
+        if (iterator != replacementMap.end()) {
+            const uint32_t newColor = iterator->second;
 
-  for (std::size_t i = 0; i < image.redChannel.size(); ++i) {
-    // Construir el color original desde los tres canales
-    const uint32_t color = (static_cast<uint32_t>(image.redChannel[i]) << SHIFT_RED) |
-                           (static_cast<uint32_t>(image.greenChannel[i]) << SHIFT_GREEN) |
-                           static_cast<uint32_t>(image.blueChannel[i]);
-
-    // Buscar el color en el mapa de reemplazo
-    auto const_iterator = replacementMap.find(color);
-    if (const_iterator != replacementMap.end()) {
-      const uint32_t newColor = const_iterator->second;
-
-      // Desglosar el nuevo color en componentes
-      const uint8_t newRed = (newColor >> SHIFT_RED) & MASK;
-      const uint8_t newGreen = (newColor >> SHIFT_GREEN) & MASK;
-      const uint8_t newBlue = newColor & MASK;
-
-      // Realizar el reemplazo de color en la imagen
-      image.redChannel[i] = newRed;
-      image.greenChannel[i] = newGreen;
-      image.blueChannel[i] = newBlue;
-    }
-  }
-}
-
-  // Encuentra el color más cercano en la lista de frecuencia cuando no está en la cuadrícula
-  uint32_t findClosestColorInFrequencyList(const std::vector<std::pair<uint32_t, int>>& frequencyList,
-                                          const std::unordered_set<uint32_t>& colorsToRemoveSet,
-                                          uint32_t colorToRemove) {
-  uint32_t closestColor = 0;
-  double minDistance = std::numeric_limits<double>::max();
-
-  for (const auto& [candidateColor, _] : frequencyList) {
-    // Omitir el color si está en el conjunto de colores a eliminar
-    if (colorsToRemoveSet.find(candidateColor) == colorsToRemoveSet.end()) {
-      const double distance = calcularDistancia(colorToRemove, candidateColor);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestColor = candidateColor;
-      }
-    }
-  }
-
-  return closestColor;
-}
-
-
-// Construir el mapa de reemplazo de colores
-std::unordered_map<uint32_t, uint32_t> construirMapaReemplazo(
-        const std::unordered_set<uint32_t>& colorsToRemoveSet,
-        const std::unordered_map<int, std::vector<uint32_t>>& grid,
-        const std::vector<std::pair<uint32_t, int>>& frequencyList) {
-
-    std::unordered_map<uint32_t, uint32_t> replacementMap;
-    for (const auto& colorToRemove : colorsToRemoveSet) {
-        const GridIndices indices = obtenerIndicesCuadricula(colorToRemove);
-        bool encontrado = false;
-        uint32_t closestColor = encontrarColorCercano(grid, indices, colorToRemove, encontrado);
-        if (!encontrado) {
-            closestColor = findClosestColorInFrequencyList(frequencyList, colorsToRemoveSet, colorToRemove);
+            // Reemplazamos los valores de los canales RGB con el nuevo color.
+            image.redChannel[i] = (newColor >> SHIFT_RED) & MASK;
+            image.greenChannel[i] = (newColor >> SHIFT_GREEN) & MASK;
+            image.blueChannel[i] = newColor & MASK;
         }
-        replacementMap[colorToRemove] = closestColor;
     }
-    return replacementMap;
 }
 
 } // namespace
 
-// Función principal de corte de frecuencia en SOA
+// Uso en la función cutfreq
+// Esta es la función principal que ejecuta los pasos para reducir los colores menos frecuentes en la imagen.
 void cutfreq(PPMImageSoA& image, int n) {
-  auto colorFrequency = calcularFrecuenciaColores(image);
-  auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);
+    // Calculamos la frecuencia de todos los colores en la imagen.
+    auto colorFrequency = calcularFrecuenciaColores(image);
+    // Obtenemos los colores menos frecuentes que queremos eliminar.
+    auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);
 
-  std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
-  std::ranges::sort(frequencyList, [](const auto& colorA, const auto& colorB) {
-      return colorA.second < colorB.second;
-  });
+    // Creamos una lista de frecuencias para todos los colores.
+    std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
+    // Ordenamos la lista de colores de menor a mayor frecuencia.
+    std::ranges::sort(frequencyList, [](const auto& colorA, const auto& colorB) {
+        if (colorA.second != colorB.second) {
+            return colorA.second < colorB.second;
+        }
+        if ((colorA.first & MASK) != (colorB.first & MASK)) {
+            return (colorA.first & MASK) > (colorB.first & MASK);
+        }
+        if (((colorA.first >> SHIFT_GREEN) & MASK) != ((colorB.first >> SHIFT_GREEN) & MASK)) {
+            return ((colorA.first >> SHIFT_GREEN) & MASK) > ((colorB.first >> SHIFT_GREEN) & MASK);
+        }
+        return ((colorA.first >> SHIFT_RED) & MASK) > ((colorB.first >> SHIFT_RED) & MASK);
+    });
 
-  std::unordered_set<uint32_t> colorsToRemoveSet(colorsToRemove.begin(), colorsToRemove.end());
-  std::unordered_map<int, std::vector<uint32_t>> grid;
+    // Convertimos la lista de colores a eliminar en un conjunto para una búsqueda rápida.
+    const std::unordered_set<uint32_t> colorsToRemoveSet(colorsToRemove.begin(), colorsToRemove.end());
+    // Encontramos los colores de reemplazo para los colores que serán eliminados.
+    const auto replacementMap = encontrarColoresReemplazo(colorsToRemoveSet, frequencyList);
 
-  for (const auto& [color, _] : frequencyList) {
-    if (colorsToRemoveSet.find(color) == colorsToRemoveSet.end()) {
-      const GridIndices indices = obtenerIndicesCuadricula(color);
-      const int gridIndex = (indices.redIndex << GRID_SHIFT_RED) | (indices.greenIndex << GRID_SHIFT_GREEN) | indices.blueIndex;
-      grid[gridIndex].push_back(color);
-    }
-  }
-
-  auto replacementMap = construirMapaReemplazo(colorsToRemoveSet, grid, frequencyList);
-  reemplazarColores(image, replacementMap);
-}
+    // Reemplazamos los colores menos frecuentes en la imagen por sus respectivos reemplazos.
+    reemplazarColores(image, replacementMap);
+} // Fin de la función cutfreq.
