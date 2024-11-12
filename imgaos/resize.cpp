@@ -7,6 +7,7 @@
 #include <string>
 #include <stdexcept>
 
+
 namespace {
     // Implementación de clamp
     template <typename T>
@@ -54,7 +55,7 @@ namespace {
 
     // Función para interpolar linealmente entre dos colores
     int interpolar(int color1, int color2, double factor_itp) {
-        const int interpolatedValue = static_cast<int>(std::round(color1 + (factor_itp * (color2 - color1))));
+        const int interpolatedValue = static_cast<int>(color1 + (factor_itp * (color2 - color1)));
         return interpolatedValue;
     }
 
@@ -75,8 +76,8 @@ namespace {
     // Nueva función para obtener las coordenadas correspondientes en la imagen original
     Coords obtenerCoordenadasOriginales(int xNueva, int yNueva, const ImageDimensions& dims) {
         return Coords{
-            .x = static_cast<double>(xNueva) * dims.width / dims.widthNueva,
-            .y = static_cast<double>(yNueva) * dims.height / dims.heightNueva
+            .x = static_cast<double>(xNueva) * (dims.width-1) / (dims.widthNueva-1),
+            .y = static_cast<double>(yNueva) * (dims.height-1) / (dims.heightNueva-1)
         };
     }
 
