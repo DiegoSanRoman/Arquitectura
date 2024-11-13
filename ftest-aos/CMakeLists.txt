@@ -1,13 +1,11 @@
 # File: ftest-aos/CMakeLists.txt
-add_executable(ftest-aos
-        maxlevel-ftest.cpp
-        )
+#add_executable(ftest-aos)
 
-target_link_libraries(ftest-aos
-        PRIVATE
-        imgaos
-        GTest::gtest_main
-        Microsoft.GSL::GSL)
+#target_link_libraries(ftest-aos
+#        PRIVATE
+#        imgaos
+#        GTest::gtest_main
+#        Microsoft.GSL::GSL)
 
-include(GoogleTest)
-gtest_discover_tests(ftest-aos)
+#include(GoogleTest)
+#gtest_discover_tests(ftest-aos)

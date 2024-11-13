@@ -18,6 +18,9 @@ constexpr unsigned int TEST_WIDTH = 2U;
 constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
+constexpr unsigned int THIRD_16BIT = 21845U;
+constexpr unsigned int TEST_WIDTH_RECTANGULAR = 4;
+constexpr unsigned int TEST_HEIGHT_RECTANGULAR = 2;
 
 class MaxLevelSoATest : public ::testing::Test {
 private:
@@ -58,7 +61,10 @@ protected:
     [[nodiscard]] const std::string& getOutputPath() const { return testOutputPath; }
 };
 
-// Tests básicos de validación de argumentos
+// Verifica que la función lance excepciones apropiadas para valores máximos inválidos:
+// - Valores negativos
+// - Valor cero
+// - Valores mayores que el máximo permitido de 16 bits
 TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -78,7 +84,8 @@ TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     );
 }
 
-// Test de conversión a la mitad del valor máximo de 8 bits
+// Verifica la conversión correcta de una imagen de 8 bits a la mitad de su valor máximo (127)
+// Comprueba que los valores de los píxeles se escalan proporcionalmente
 TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -233,6 +240,40 @@ TEST_F(MaxLevelSoATest, RoundingBehavior) {
     PPMImageSoA result;
     ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
     EXPECT_EQ(result.redChannel[0], ARBITRARY_MAX);
+}
+
+// Verifica que se mantiene la relación de aspecto en imágenes no cuadradas
+TEST_F(MaxLevelSoATest, PreserveAspectRatio) {
+    PPMImageSoA rectangularImage;
+    rectangularImage.width = TEST_WIDTH_RECTANGULAR;
+    rectangularImage.height = TEST_HEIGHT_RECTANGULAR;
+    rectangularImage.maxValue = static_cast<int>(MAX_8BIT);
+
+    // Llenar los canales con datos de ejemplo
+    rectangularImage.redChannel = {
+        MAX_8BIT, 0, 0, MAX_8BIT,
+        0, MAX_8BIT, 0, MAX_8BIT
+    };
+    rectangularImage.greenChannel = {
+        0, MAX_8BIT, 0, 0,
+        MAX_8BIT, 0, MAX_8BIT, MAX_8BIT
+    };
+    rectangularImage.blueChannel = {
+        0, 0, MAX_8BIT, MAX_8BIT,
+        0, 0, MAX_8BIT, 0
+    };
+
+    ASSERT_TRUE(escribirImagenPPMSoA(getInputPath(), rectangularImage));
+
+    ASSERT_NO_THROW(
+        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+    );
+
+    PPMImageSoA result;
+    ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
+
+    EXPECT_EQ(result.width, rectangularImage.width);
+    EXPECT_EQ(result.height, rectangularImage.height);
 }
 
 // Test de manejo de imagen de un solo píxel

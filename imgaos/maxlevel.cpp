@@ -77,10 +77,6 @@ namespace {
 }
 
 void performMaxLevelOperation(const std::string& inputFile, const std::string& outputFile, int newMaxValue) {
-    std::cout << "Maxlevel-aos con nuevo valor máximoo: " << newMaxValue << "\n"
-              << "Archivo de entrada: " << inputFile << "\n"
-              << "Archivo de salida: " << outputFile << "\n";
-
     try {
         validateMaxValue(newMaxValue);
 

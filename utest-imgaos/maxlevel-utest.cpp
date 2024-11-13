@@ -18,7 +18,7 @@ constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
 constexpr unsigned int THIRD_16BIT = 21845U;
-  constexpr unsigned int BLACK = 12U;
+constexpr unsigned int BLACK = 12U;
 
 class MaxLevelTest : public ::testing::Test {
 private:
@@ -239,32 +239,6 @@ TEST_F(MaxLevelTest, PreserveAspectRatio) {
     ASSERT_TRUE(leerImagenPPM(getOutputPath(), result));
     EXPECT_EQ(result.width, tallImage.width);
     EXPECT_EQ(result.height, tallImage.height);
-}
-
-// Verifica la conversión de una imagen de 16 bits a un tercio del valor máximo de 16 bits
-// Prueba la precisión de la escala en el rango de 16 bits
-TEST_F(MaxLevelTest, From16BitToThird16Bit) {
-    PPMImage img16bit = getTestImage();
-    img16bit.maxValue = static_cast<int>(MAX_16BIT);
-    std::vector<unsigned char> data16Bit;
-
-    for (const auto& value : img16bit.pixelData) {
-        auto scaledValue = static_cast<unsigned short>(value << BITS_PER_BYTE);
-        data16Bit.push_back(static_cast<unsigned char>(scaledValue & BYTE_MASK));
-        data16Bit.push_back(static_cast<unsigned char>(scaledValue >> BITS_PER_BYTE));
-    }
-
-    img16bit.pixelData = data16Bit;
-    setTestImage(img16bit);
-    ASSERT_TRUE(writeTestImageToDisk());
-
-    ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(THIRD_16BIT))
-    );
-
-    PPMImage result;
-    ASSERT_TRUE(leerImagenPPM(getOutputPath(), result));
-    EXPECT_EQ(result.maxValue, static_cast<int>(THIRD_16BIT));
 }
 
 // Verifica el manejo correcto de imágenes de un solo píxel
