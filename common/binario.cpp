@@ -74,7 +74,6 @@ namespace {
   // Leer datos de píxeles en formato SOA
   bool leerDatosPixeles(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
       const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
-      const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Redimensionar los canales RGB
       image.redChannel.resize(totalPixels);
@@ -82,7 +81,7 @@ namespace {
       image.blueChannel.resize(totalPixels);
 
       // Crear un búfer intermedio para leer cada componente de color
-      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
+      std::vector<char> buffer(totalPixels * COMPONENTS_PER_PIXEL);
 
       if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
         std::cerr << "Error al leer los datos de la imagen.\n";
@@ -137,10 +136,10 @@ namespace {
       const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Crear un búfer intermedio para almacenar los datos RGB en formato binario
-      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
+      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL * 2);
 
       // Copiar los datos de los canales RGB al búfer intermedio
-      for (std::size_t i = 0; i < totalPixels; ++i) {
+      for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
         buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(image.redChannel[i]);
         buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(image.greenChannel[i]);
         buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(image.blueChannel[i]);
@@ -155,7 +154,7 @@ namespace {
         swapBytes(tempGreen);
         swapBytes(tempBlue);
 
-        for (std::size_t i = 0; i < totalPixels; ++i) {
+        for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
           buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(tempRed[i]);
           buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(tempGreen[i]);
           buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(tempBlue[i]);

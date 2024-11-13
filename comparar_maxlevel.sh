@@ -2,8 +2,8 @@
 
 # Archivos de entrada (imágenes PPM originales)
 input_file1="Ejemplos/deer-small-100.ppm"
-input_file2="output/deer-small-100-aos.ppm"
-output="output/diff_result-aos-100.txt"
+input_file2="output/deer-small-100-soa.ppm"
+output="output/diff_result-soa-100.txt"
 file1_txt="output/file1.txt"
 file2_txt="output/file2.txt"
 threshold=1

@@ -17,6 +17,7 @@ constexpr unsigned int BYTE_MASK = 0xFFU;
 constexpr unsigned int TEST_WIDTH = 2U;
 constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
+constexpr unsigned int QUARTER_8BIT = 63U;
 
 class MaxLevelSoATest : public ::testing::Test {
 private:
@@ -57,7 +58,7 @@ protected:
     [[nodiscard]] const std::string& getOutputPath() const { return testOutputPath; }
 };
 
-// Test que verifica que la función lanza excepciones apropiadas cuando se le pasan valores máximos inválidos
+// Tests básicos de validación de argumentos
 TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -77,7 +78,7 @@ TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     );
 }
 
-// Test que verifica la conversión correcta de una imagen de 8 bits a un valor máximo de 127
+// Test de conversión a la mitad del valor máximo de 8 bits
 TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -108,7 +109,35 @@ TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
     EXPECT_EQ(result.blueChannel, expectedBlue);
 }
 
-// Test que verifica la conversión correcta de una imagen de 8 bits a 16 bits
+// Test de conversión a un cuarto del valor máximo de 8 bits
+TEST_F(MaxLevelSoATest, ConvertToQuarter8Bit) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    ASSERT_NO_THROW(
+        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(QUARTER_8BIT))
+    );
+
+    PPMImageSoA result;
+    ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
+
+    EXPECT_EQ(result.maxValue, static_cast<int>(QUARTER_8BIT));
+
+    const std::vector<uint8_t> expectedRed = {
+        QUARTER_8BIT, 0, 0, QUARTER_8BIT
+    };
+    const std::vector<uint8_t> expectedGreen = {
+        0, QUARTER_8BIT, 0, QUARTER_8BIT
+    };
+    const std::vector<uint8_t> expectedBlue = {
+        0, 0, QUARTER_8BIT, QUARTER_8BIT
+    };
+
+    EXPECT_EQ(result.redChannel, expectedRed);
+    EXPECT_EQ(result.greenChannel, expectedGreen);
+    EXPECT_EQ(result.blueChannel, expectedBlue);
+}
+
+// Test de conversión de 8 bits a 16 bits
 TEST_F(MaxLevelSoATest, ConvertTo16BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -129,7 +158,7 @@ TEST_F(MaxLevelSoATest, ConvertTo16BitMax) {
     EXPECT_EQ(result.blueChannel.size(), getTestImage().blueChannel.size() * 2);
 }
 
-// Test que verifica el manejo correcto de imágenes vacías
+// Test de manejo de imágenes vacías
 TEST_F(MaxLevelSoATest, HandleEmptyImage) {
     PPMImageSoA emptyImage;
     emptyImage.width = 0;
@@ -150,7 +179,7 @@ TEST_F(MaxLevelSoATest, HandleEmptyImage) {
     EXPECT_TRUE(result.blueChannel.empty());
 }
 
-// Test que verifica que la función lanza una excepción cuando el archivo de entrada no existe
+// Test de archivo de entrada no existente
 TEST_F(MaxLevelSoATest, ThrowsOnNonexistentInputFile) {
     EXPECT_THROW(
         performMaxLevelOperation("nonexistent.ppm", getOutputPath(), static_cast<int>(HALF_8BIT)),
@@ -158,7 +187,7 @@ TEST_F(MaxLevelSoATest, ThrowsOnNonexistentInputFile) {
     );
 }
 
-// Test que verifica la conversión correcta de una imagen de 16 bits a 8 bits
+// Test de conversión de 16 bits a 8 bits
 TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
     PPMImageSoA img16bit = getTestImage();
     img16bit.maxValue = static_cast<int>(MAX_16BIT);
@@ -193,7 +222,7 @@ TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
     EXPECT_EQ(result.blueChannel.size(), getTestImage().blueChannel.size() / 2);
 }
 
-// Test que verifica el comportamiento del redondeo al convertir valores de píxeles
+// Test de comportamiento de redondeo
 TEST_F(MaxLevelSoATest, RoundingBehavior) {
     ASSERT_TRUE(writeTestImageToDisk());
 
@@ -203,9 +232,79 @@ TEST_F(MaxLevelSoATest, RoundingBehavior) {
 
     PPMImageSoA result;
     ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
+    EXPECT_EQ(result.redChannel[0], ARBITRARY_MAX);
+}
 
-    // Verificar que los valores se han redondeado correctamente
-    EXPECT_EQ(result.redChannel[0], ARBITRARY_MAX); // Componente rojo del primer píxel
+// Test de manejo de imagen de un solo píxel
+TEST_F(MaxLevelSoATest, HandleSinglePixelImage) {
+    PPMImageSoA singlePixel;
+    singlePixel.width = 1;
+    singlePixel.height = 1;
+    singlePixel.maxValue = static_cast<int>(MAX_8BIT);
+
+    singlePixel.redChannel = {MAX_8BIT};
+    singlePixel.greenChannel = {MAX_8BIT};
+    singlePixel.blueChannel = {MAX_8BIT};
+
+    setTestImage(singlePixel);
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    ASSERT_NO_THROW(
+        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+    );
+
+    PPMImageSoA result;
+    ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
+    EXPECT_EQ(result.width, 1);
+    EXPECT_EQ(result.height, 1);
+    EXPECT_EQ(result.redChannel.size(), 1);
+    EXPECT_EQ(result.greenChannel.size(), 1);
+    EXPECT_EQ(result.blueChannel.size(), 1);
+    EXPECT_EQ(result.redChannel[0], HALF_8BIT);
+    EXPECT_EQ(result.greenChannel[0], HALF_8BIT);
+    EXPECT_EQ(result.blueChannel[0], HALF_8BIT);
+}
+
+// Test de error de escritura
+TEST_F(MaxLevelSoATest, ThrowsOnWriteError) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    EXPECT_THROW(
+        performMaxLevelOperation(getInputPath(), "/nonexistent/dir/output.ppm", static_cast<int>(HALF_8BIT)),
+        std::runtime_error
+    );
+}
+
+// Test de preservación de píxeles negros
+TEST_F(MaxLevelSoATest, PreserveBlackPixels) {
+    PPMImageSoA blackImage;
+    blackImage.width = 2;
+    blackImage.height = 2;
+    blackImage.maxValue = static_cast<int>(MAX_8BIT);
+    blackImage.redChannel = std::vector<uint8_t>(4, 0);
+    blackImage.greenChannel = std::vector<uint8_t>(4, 0);
+    blackImage.blueChannel = std::vector<uint8_t>(4, 0);
+
+    setTestImage(blackImage);
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    ASSERT_NO_THROW(
+        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT))
+    );
+
+    PPMImageSoA result;
+    ASSERT_TRUE(leerImagenPPMSoA(getOutputPath(), result));
+
+    // Verificar que todos los canales mantienen sus píxeles negros
+    for (const auto& value : result.redChannel) {
+        EXPECT_EQ(value, 0);
+    }
+    for (const auto& value : result.greenChannel) {
+        EXPECT_EQ(value, 0);
+    }
+    for (const auto& value : result.blueChannel) {
+        EXPECT_EQ(value, 0);
+    }
 }
 
 }  // namespace

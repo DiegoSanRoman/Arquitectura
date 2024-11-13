@@ -7,6 +7,7 @@
 #include <array>
 #include <cstring>
 #include <algorithm>
+#include <numeric> // Para std::iota
 
 namespace common {
 namespace {
@@ -24,7 +25,6 @@ void write_binary(std::ostream& output, const T& value) {
     output.write(buffer.data(), sizeof(value));
 }
 
-// Estructura para representar un color RGB con hash personalizado
 struct Color {
     uint8_t red;
     uint8_t green;
@@ -35,7 +35,6 @@ struct Color {
     }
 };
 
-// Función hash para la estructura Color
 struct ColorHash {
     std::size_t operator()(const Color& color) const noexcept {
         return (static_cast<std::size_t>(color.red) << RED_SHIFT) |
@@ -68,7 +67,7 @@ void generarTablaColores(const ColorChannels& channels, ColorChannels& uniqueCol
     std::unordered_map<Color, uint32_t, ColorHash> colorTable;
 
     for (size_t i = 0; i < numPixels; ++i) {
-        const Color color = { .red = channels.red[i], .green = channels.green[i], .blue = channels.blue[i] };
+        const Color color = {.red = channels.red[i], .green = channels.green[i], .blue = channels.blue[i]};
 
         auto result = colorTable.find(color);
         if (result == colorTable.end()) {
@@ -84,29 +83,37 @@ void generarTablaColores(const ColorChannels& channels, ColorChannels& uniqueCol
     }
 }
 
-void ordenarTablaColores(ColorChannels& uniqueColors) {
+void ordenarTablaColores(ColorChannels& uniqueColors, std::vector<uint32_t>& colorIndices, const ColorChannels& channels) {
     std::vector<size_t> indices(uniqueColors.red.size());
-    for (size_t i = 0; i < indices.size(); ++i) {
-        indices[i] = i;
-    }
+    std::iota(indices.begin(), indices.end(), 0);
 
     std::ranges::sort(indices, [&](size_t indexA, size_t indexB) {
         return std::tie(uniqueColors.red[indexA], uniqueColors.green[indexA], uniqueColors.blue[indexA]) <
                std::tie(uniqueColors.red[indexB], uniqueColors.green[indexB], uniqueColors.blue[indexB]);
     });
 
-    ColorChannels sortedColors;
-    for (const size_t index : indices) {
+    ColorChannels sortedColors;    for (const size_t index : indices) {
         sortedColors.red.push_back(uniqueColors.red[index]);
         sortedColors.green.push_back(uniqueColors.green[index]);
         sortedColors.blue.push_back(uniqueColors.blue[index]);
+    }
+
+    for (size_t i = 0; i < channels.red.size(); ++i) {
+        const auto findIndex = std::ranges::find_if(sortedColors.red,
+            [&](const uint8_t& redVal) {
+                const auto colorIdx = static_cast<size_t>(&redVal - sortedColors.red.data());
+                return redVal == channels.red[i] &&
+                       sortedColors.green[colorIdx] == channels.green[i] &&
+                       sortedColors.blue[colorIdx] == channels.blue[i];
+            });
+
+        colorIndices[i] = static_cast<uint32_t>(std::distance(sortedColors.red.begin(), findIndex));
     }
     uniqueColors = std::move(sortedColors);
 }
 
 void escribirEncabezado(std::ofstream& outputFile, const PPMImage& image, size_t uniqueColorCount) {
-    outputFile << "C6 " << image.width << " " << image.height << " " << image.maxValue << " "
-               << uniqueColorCount << "\n";
+    outputFile << "C6 " << image.width << " " << image.height << " " << image.maxValue << " " << uniqueColorCount << "\n";
 }
 
 void escribirTablaColores(std::ofstream& outputFile, const ColorChannels& uniqueColors, int colorSize) {
@@ -137,11 +144,11 @@ void escribirIndicesPixeles(std::ofstream& outputFile, const std::vector<uint32_
 
 int determinarBytesPorPixel(size_t uniqueColorCount) {
     if (uniqueColorCount <= MAX_BYTE_VALUE) {
-        return 1;
-    }
+      return 1;
+}
     if (uniqueColorCount <= MAX_SHORT_VALUE) {
-        return 2;
-    }
+      return 2;
+}
     return 4;
 }
 
@@ -161,7 +168,7 @@ int compress(const CompressionPaths& paths) {
     std::vector<uint32_t> colorIndices(channels.red.size());
 
     generarTablaColores(channels, uniqueColors, colorIndices);
-    ordenarTablaColores(uniqueColors);
+    ordenarTablaColores(uniqueColors, colorIndices, channels);
 
     std::ofstream output(paths.outputImagePath, std::ios::binary);
     if (!output) {

@@ -1,3 +1,4 @@
+/*
 #include "resize.hpp"
 #include "../common/binario.hpp"
 #include <iostream>
@@ -181,3 +182,4 @@ void performResizeOperation(const std::string& inputFile, const std::string& out
     std::cerr << "Error: " << e.what() << "\n";
   }
 }
+*/

@@ -65,8 +65,8 @@ namespace {
 
   void write16BitValue(unsigned int value, std::vector<uint8_t>& channel, std::size_t index) {
     const std::size_t byteIndex = index * 2U;
-    channel[byteIndex] = static_cast<uint8_t>(value & BYTE_MASK);
-    channel[byteIndex + 1] = static_cast<uint8_t>((value >> BITS_PER_BYTE) & BYTE_MASK);
+    channel[byteIndex] = static_cast<uint8_t>(value & BYTE_MASK); // Least significant byte
+    channel[byteIndex + 1] = static_cast<uint8_t>((value >> BITS_PER_BYTE) & BYTE_MASK); // Most significant byte
   }
 
   unsigned int read8BitValue(const std::vector<uint8_t>& channel, std::size_t index) {
@@ -107,7 +107,7 @@ namespace {
   }
 
   void processPixelData(const PPMImageSoA& inputImage, PPMImageSoA& outputImage,
-                        const PixelProcessingParams& params) {
+                      const PixelProcessingParams& params) {
     initializeOutputImage(outputImage, inputImage, params);
 
     for (std::size_t i = 0; i < params.totalComponents; ++i) {
