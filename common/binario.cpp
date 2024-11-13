@@ -30,7 +30,7 @@ namespace {
         return true;
     }
 
-    bool leerEncabezadoPPM(std::ifstream& file, PPMImageSoA& image) {
+    bool leerEncabezadoPPMSoA(std::ifstream& file, PPMImageSoA& image) {
         std::string magicNumber;
         file >> magicNumber;
         if (magicNumber != "P6") {
@@ -71,39 +71,46 @@ namespace {
         }
         return true;
     }
+
   // Leer datos de píxeles en formato SOA
-  bool leerDatosPixeles(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
-      const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
+  bool leerDatosPixelesSoA(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
+    const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
 
-      // Redimensionar los canales RGB
-      image.redChannel.resize(totalPixels);
-      image.greenChannel.resize(totalPixels);
-      image.blueChannel.resize(totalPixels);
+    // Redimensionar los canales RGB
+    image.redChannel.resize(totalPixels * static_cast<std::size_t>(bytesPerComponent));
+    image.greenChannel.resize(totalPixels * static_cast<std::size_t>(bytesPerComponent));
+    image.blueChannel.resize(totalPixels * static_cast<std::size_t>(bytesPerComponent));
 
-      // Crear un búfer intermedio para leer cada componente de color
-      std::vector<char> buffer(totalPixels * COMPONENTS_PER_PIXEL);
+    // Crear un búfer intermedio para leer cada componente de color
+    std::vector<char> buffer(totalPixels * COMPONENTS_PER_PIXEL * static_cast<std::size_t>(bytesPerComponent));
 
-      if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
+    if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
         std::cerr << "Error al leer los datos de la imagen.\n";
         return false;
-      }
+    }
 
-      // Copiar los datos desde el búfer intermedio a los canales RGB
-      for (std::size_t i = 0; i < totalPixels; ++i) {
-        image.redChannel[i] = static_cast<uint8_t>(buffer[i * COMPONENTS_PER_PIXEL]);
-        image.greenChannel[i] = static_cast<uint8_t>(buffer[(i * COMPONENTS_PER_PIXEL) + 1]);
-        image.blueChannel[i] = static_cast<uint8_t>(buffer[(i * COMPONENTS_PER_PIXEL) + 2]);
-      }
+    // Copiar los datos desde el búfer intermedio a los canales RGB
+    for (std::size_t i = 0; i < totalPixels; ++i) {
+        std::memcpy(&image.redChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    &buffer[i * COMPONENTS_PER_PIXEL * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
+        std::memcpy(&image.greenChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    &buffer[(i * COMPONENTS_PER_PIXEL + 1) * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
+        std::memcpy(&image.blueChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    &buffer[(i * COMPONENTS_PER_PIXEL + 2) * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
+    }
 
-      // Si es de 16 bits, hacer el intercambio de bytes
-      if (bytesPerComponent == 2) {
+    // Si es de 16 bits, hacer el intercambio de bytes
+    if (bytesPerComponent == 2) {
         swapBytes(image.redChannel);
         swapBytes(image.greenChannel);
         swapBytes(image.blueChannel);
-      }
-
-      return true;
     }
+
+    return true;
+}
 
 
     bool escribirEncabezadoPPM(std::ofstream& file, const PPMImage& image) {
@@ -111,7 +118,7 @@ namespace {
         return file.good();
     }
 
-    bool escribirEncabezadoPPM(std::ofstream& file, const PPMImageSoA& image) {
+    bool escribirEncabezadoPPMSoA(std::ofstream& file, const PPMImageSoA& image) {
         file << "P6\n" << image.width << " " << image.height << "\n" << image.maxValue << "\n";
         return file.good();
     }
@@ -131,34 +138,24 @@ namespace {
     }
 
   // Escribir datos de píxeles en formato SOA sin reinterpret_cast
-  bool escribirDatosPixeles(std::ofstream& file, const PPMImageSoA& image, int bytesPerComponent) {
+  bool escribirDatosPixelesSoA(std::ofstream& file, const PPMImageSoA& image, int bytesPerComponent) {
       const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
       const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Crear un búfer intermedio para almacenar los datos RGB en formato binario
-      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL * 2);
+      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
 
       // Copiar los datos de los canales RGB al búfer intermedio
-      for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
-        buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(image.redChannel[i]);
-        buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(image.greenChannel[i]);
-        buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(image.blueChannel[i]);
-      }
-
-      // Si es de 16 bits, hacer el intercambio de bytes en el búfer antes de escribir
-      if (bytesPerComponent == 2) {
-        std::vector<unsigned char> tempRed = image.redChannel;
-        std::vector<unsigned char> tempGreen = image.greenChannel;
-        std::vector<unsigned char> tempBlue = image.blueChannel;
-        swapBytes(tempRed);
-        swapBytes(tempGreen);
-        swapBytes(tempBlue);
-
-        for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
-          buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(tempRed[i]);
-          buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(tempGreen[i]);
-          buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(tempBlue[i]);
-        }
+      for (std::size_t i = 0; i < totalPixels; ++i) {
+        std::memcpy(&buffer[i * COMPONENTS_PER_PIXEL * static_cast<std::size_t>(bytesPerComponent)],
+                    &image.redChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
+        std::memcpy(&buffer[(i * COMPONENTS_PER_PIXEL + 1) * static_cast<std::size_t>(bytesPerComponent)],
+                    &image.greenChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
+        std::memcpy(&buffer[(i * COMPONENTS_PER_PIXEL + 2) * static_cast<std::size_t>(bytesPerComponent)],
+                    &image.blueChannel[i * static_cast<std::size_t>(bytesPerComponent)],
+                    static_cast<std::size_t>(bytesPerComponent));
       }
 
       // Escribir el búfer intermedio en el archivo
@@ -292,12 +289,12 @@ bool leerImagenPPMSoA(const std::string& filePath, PPMImageSoA& image) {
             return false;
         }
 
-        if (!leerEncabezadoPPM(file, image)) {
+        if (!leerEncabezadoPPMSoA(file, image)) {
             return false;
         }
 
         const int bytesPerComponent = (image.maxValue <= MAX_8BIT_VALUE) ? 1 : 2;
-        return leerDatosPixeles(file, image, bytesPerComponent);
+        return leerDatosPixelesSoA(file, image, bytesPerComponent);
 
     } catch (const std::exception& e) {
         std::cerr << "Error al leer imagen PPM: " << e.what() << '\n';
@@ -313,13 +310,13 @@ bool escribirImagenPPMSoA(const std::string& filePath, const PPMImageSoA& image)
             return false;
         }
 
-        if (!escribirEncabezadoPPM(file, image)) {
+        if (!escribirEncabezadoPPMSoA(file, image)) {
             std::cerr << "Error al escribir el encabezado de la imagen.\n";
             return false;
         }
 
         const int bytesPerComponent = (image.maxValue <= MAX_8BIT_VALUE) ? 1 : 2;
-        if (!escribirDatosPixeles(file, image, bytesPerComponent)) {
+        if (!escribirDatosPixelesSoA(file, image, bytesPerComponent)) {
             std::cerr << "Error al escribir los datos de la imagen.\n";
             return false;
         }
