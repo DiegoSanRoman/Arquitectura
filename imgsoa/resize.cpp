@@ -108,11 +108,13 @@ namespace {
     colorInterpolado.green = interpolarComponente(img.greenChannel, indices, params.xRatio, params.yRatio);
     colorInterpolado.blue = interpolarComponente(img.blueChannel, indices, params.xRatio, params.yRatio);
   }
-  /*void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado,
+  /*
+  void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado,
                             double xLow, double xHigh, double yLow, double yHigh, double xRatio, double yRatio) {
     const InterpolacionParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
     interpolacionBilineal(original, params, colorInterpolado);
-  }*/
+  }
+  */
   void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado, const EscaladoParams& params) {
     const InterpolacionParams interpolParams = {
       .xLow = params.xLow,

@@ -3,6 +3,7 @@
 #define ARQUITECTURA_MAXLEVEL_HPP
 
 #include <string>
+#include "../common/binario.hpp"
 
 /**
  * @brief Realiza la operación de cambio de valor máximo en una imagen PPM.
@@ -19,8 +20,7 @@
  */
 
 // Función para realizar la operación de maxlevel, le pasamos el archivo de entrada, el archivo de salida y el nuevo valor máximo
-void performMaxLevelOperation(const std::string& inputFile,
-                            const std::string& outputFile,
-                            int newMaxValue);
+void performMaxLevelOperation(const std::string& inputFile, const std::string& outputFile, int newMaxValue);
+
 
 #endif //ARQUITECTURA_MAXLEVEL_HPP

@@ -2,6 +2,7 @@
 #ifndef MAXLEVEL_HPP
 #define MAXLEVEL_HPP
 
+#include "../common/binario.hpp"
 #include <string>
 
 /**
@@ -17,6 +18,7 @@
  * @throws std::invalid_argument si newMaxValue está fuera del rango válido
  * @throws std::runtime_error si hay errores al leer o escribir los archivoss
  */
+
 
 // Función para realizar la operación de maxlevel, le pasamos el archivo de entrada, el archivo de salida y el nuevo valor máximo
 void performMaxLevelOperation(const std::string& inputFile, const std::string& outputFile, int newMaxValue);
