@@ -21,7 +21,7 @@ namespace {
     int const newMaxValue = std::stoi(args.getAdditionalParams()[0]);
     performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
   }
-  /*
+
   // Función para validar parámetros de la operación "resize"
   void validateResizeParams(const ProgramArgs& args) {
     if (args.getAdditionalParams().size() != 2) {
@@ -38,8 +38,7 @@ namespace {
       throw std::invalid_argument("Invalid resize height: " + std::to_string(newHeight));
     }
   }
-  */
-  /*
+
   // Nueva función para procesar la operación "resize"
   void processResize(const ProgramArgs& args) {
     validateResizeParams(args);
@@ -47,7 +46,6 @@ namespace {
     const int newHeight = std::stoi(args.getAdditionalParams()[1]);
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
-  */
 
   void processInfo(const ProgramArgs& args) {
     info(args.getInputFile());
@@ -98,11 +96,9 @@ int main(int argc, char* argv[]) {
     if (args.getOperation() == "maxlevel") {
       processMaxlevel(args);
     }
-    /*
     else if (args.getOperation() == "resize") {
       processResize(args);
     }
-    */
     else if (args.getOperation() == "info") {
       processInfo(args);
     }

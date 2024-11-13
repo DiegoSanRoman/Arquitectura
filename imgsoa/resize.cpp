@@ -1,4 +1,3 @@
-/*
 #include "resize.hpp"
 #include "../common/binario.hpp"
 #include <iostream>
@@ -11,7 +10,7 @@
 #include <algorithm> // Para std::clamp
 
 namespace {
-  constexpr int MAX_VALUE = 255;
+  constexpr double MAX_VALUE = 255.0;
 
   template <typename T>
   T clamp(T valor, T minimo, T maximo) {
@@ -28,6 +27,12 @@ namespace {
     unsigned char red = 0;
     unsigned char green = 0;
     unsigned char blue = 0;
+  };
+
+  /*Nuevo*/
+  struct ImageDimensions {
+    int width;
+    int height;
   };
 
   struct InterpolacionParams {
@@ -50,6 +55,16 @@ namespace {
     int width = 0;
     int height = 0;
   };
+
+  struct EscaladoParams {
+    double xLow;
+    double xHigh;
+    double yLow;
+    double yHigh;
+    double xRatio;
+    double yRatio;
+  };
+
 
   ImageSOA leerImagenSOA(const PPMImage& inputImage) {
     ImageSOA imageSOA;
@@ -79,7 +94,7 @@ namespace {
     const double interpoladoX2 = interpolar(channel.at(indices.index10), channel.at(indices.index11), xRatio);
     const double top = interpolar(interpoladoX1, interpoladoX2, yRatio);
 
-    return static_cast<unsigned char>(clamp(top, 0.0, 255.0));
+    return static_cast<unsigned char>(clamp(top, 0.0, MAX_VALUE));
   }
 
   void interpolacionBilineal(const ImageSOA& img, const InterpolacionParams& params, Color& colorInterpolado) {
@@ -88,18 +103,30 @@ namespace {
     const auto index10 = static_cast<size_t>((params.yHigh * img.width) + params.xLow);
     const auto index11 = static_cast<size_t>((params.yHigh * img.width) + params.xHigh);
 
-    const IndicesInterpolacion indices = {index00, index01, index10, index11};
+    const IndicesInterpolacion indices = {.index00 = index00, .index01 = index01, .index10 = index10, .index11 = index11};
     colorInterpolado.red = interpolarComponente(img.redChannel, indices, params.xRatio, params.yRatio);
     colorInterpolado.green = interpolarComponente(img.greenChannel, indices, params.xRatio, params.yRatio);
     colorInterpolado.blue = interpolarComponente(img.blueChannel, indices, params.xRatio, params.yRatio);
   }
-  void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado,
+  /*void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado,
                             double xLow, double xHigh, double yLow, double yHigh, double xRatio, double yRatio) {
-    const InterpolacionParams params = {xLow, xHigh, yLow, yHigh, xRatio, yRatio};
+    const InterpolacionParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
     interpolacionBilineal(original, params, colorInterpolado);
+  }*/
+  void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado, const EscaladoParams& params) {
+    const InterpolacionParams interpolParams = {
+      .xLow = params.xLow,
+      .xHigh = params.xHigh,
+      .yLow = params.yLow,
+      .yHigh = params.yHigh,
+      .xRatio = params.xRatio,
+      .yRatio = params.yRatio
+  };
+    interpolacionBilineal(original, interpolParams, colorInterpolado);
   }
+
   void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
-      size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
+      const size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
       escalada.redChannel.resize(totalPixels);
       escalada.greenChannel.resize(totalPixels);
       escalada.blueChannel.resize(totalPixels);
@@ -119,9 +146,13 @@ namespace {
               const double yRatio = y_original - yLow;
 
               Color colorInterpolado;
-              procesarPixelEscalado(original, colorInterpolado, xLow, xHigh, yLow, yHigh, xRatio, yRatio);
+              /*procesarPixelEscalado(original, colorInterpolado, xLow, xHigh, yLow, yHigh, xRatio, yRatio);*/
+              const EscaladoParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
+              procesarPixelEscalado(original, colorInterpolado, params);
 
-              const auto idx = static_cast<size_t>(y_nueva * escalada.width + x_nueva);
+
+              /*const auto idx = static_cast<size_t>((y_nueva * escalada.width) + x_nueva);*/
+              const auto idx = (static_cast<size_t>(y_nueva) * static_cast<size_t>(escalada.width)) + static_cast<size_t>(x_nueva);
               escalada.redChannel[idx] = colorInterpolado.red;
               escalada.greenChannel[idx] = colorInterpolado.green;
               escalada.blueChannel[idx] = colorInterpolado.blue;
@@ -134,23 +165,23 @@ namespace {
     PPMImage outputImage;
     outputImage.width = imagenSOA.width;
     outputImage.height = imagenSOA.height;
-    outputImage.maxValue = MAX_VALUE;
+    outputImage.maxValue = static_cast<int>(MAX_VALUE);
 
-    size_t totalPixels = static_cast<size_t>(imagenSOA.width) * static_cast<size_t>(imagenSOA.height) * 3;
+    const size_t totalPixels = static_cast<size_t>(imagenSOA.width) * static_cast<size_t>(imagenSOA.height) * 3;
     outputImage.pixelData.resize(totalPixels);
 
     for (size_t i = 0; i < imagenSOA.redChannel.size(); ++i) {
       outputImage.pixelData[i * 3] = imagenSOA.redChannel[i];
-      outputImage.pixelData[i * 3 + 1] = imagenSOA.greenChannel[i];
-      outputImage.pixelData[i * 3 + 2] = imagenSOA.blueChannel[i];
+      outputImage.pixelData[(i * 3) + 1] = imagenSOA.greenChannel[i];
+      outputImage.pixelData[(i * 3) + 2] = imagenSOA.blueChannel[i];
     }
     return outputImage;
   }
 
-  ImageSOA inicializarImagenEscalada(int newWidth, int newHeight) {
+  ImageSOA inicializarImagenEscalada(ImageDimensions dims) {
     ImageSOA imagenEscalada;
-    imagenEscalada.width = newWidth;
-    imagenEscalada.height = newHeight;
+    imagenEscalada.width = dims.width;
+    imagenEscalada.height = dims.height;
     return imagenEscalada;
   }
 }
@@ -169,7 +200,10 @@ void performResizeOperation(const std::string& inputFile, const std::string& out
     }
 
     const ImageSOA imageSOA = leerImagenSOA(inputImage);
-    ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(newWidth, newHeight);
+    /*ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(newWidth, newHeight);*/
+    const ImageDimensions dims = {.width=newWidth, .height=newHeight};
+    ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(dims);
+
 
     escalarImagen(imageSOA, imagenEscaladaSOA);
 
@@ -182,4 +216,3 @@ void performResizeOperation(const std::string& inputFile, const std::string& out
     std::cerr << "Error: " << e.what() << "\n";
   }
 }
-*/
