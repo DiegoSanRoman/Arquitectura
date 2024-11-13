@@ -1,143 +1,191 @@
-/*
-#include "imgaos/cutfreq.hpp"  // Tu archivo con las funciones de `cutfreq`
 #include <gtest/gtest.h>
+#include "../imgaos/cutfreq.hpp"
+#include "../common/binario.hpp"
 #include <vector>
-#include <iostream>  // Para debugging
-
-using namespace imgaos;
-
-constexpr Color BLACK{0, 0, 0};
-constexpr Color WHITE{255, 255, 255};
-constexpr Color GRAY{128, 128, 128};
-constexpr Color RED{255, 0, 0};
-constexpr Color GREEN{0, 255, 0};
-constexpr Color BLUE{0, 0, 255};
+#include <stdexcept>
+#include <filesystem>
+#include <unordered_set>
 
 namespace {
-  void printImagePixels(const ImageAOS& image) {
-      for (const auto& pixel : image.pixels) {
-          std::cout << "(" << pixel.r << ", " << pixel.g << ", " << pixel.b << ") ";
-      }
-      std::cout << "\n";
+
+constexpr unsigned int MAX_8BIT = 255U;
+constexpr unsigned int TEST_WIDTH = 3U;
+constexpr unsigned int TEST_HEIGHT = 3U;
+
+class CutFreqTest : public ::testing::Test {
+private:
+    PPMImage testImage;
+    const std::string testInputPath{"test_input.ppm"};
+    const std::string testOutputPath{"test_output.ppm"};
+
+protected:
+    void SetUp() override {
+        testImage.width = TEST_WIDTH;
+        testImage.height = TEST_HEIGHT;
+        testImage.maxValue = MAX_8BIT;
+        testImage.pixelData = {
+            255, 0, 0,     0, 255, 0,     0, 0, 255,
+            255, 255, 0,   0, 255, 255,   255, 0, 255,
+            128, 128, 128, 64, 64, 64,    192, 192, 192
+        };
+    }
+
+    void TearDown() override {
+        std::filesystem::remove(testInputPath);
+        std::filesystem::remove(testOutputPath);
+    }
+
+    [[nodiscard]] bool writeTestImageToDisk() const {
+        return escribirImagenPPM(testInputPath, testImage);
+    }
+
+    [[nodiscard]] PPMImage& getTestImage() { return testImage; }
+    void setTestImage(const PPMImage& image) { testImage = image; }
+    [[nodiscard]] const std::string& getInputPath() const { return testInputPath; }
+    [[nodiscard]] const std::string& getOutputPath() const { return testOutputPath; }
+};
+
+// Verifica que la función lanza una excepción para un número inválido de colores a eliminar (negativo)
+TEST_F(CutFreqTest, ThrowsOnInvalidNumberOfColorsToCut) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    EXPECT_THROW(
+        cutfreq(getTestImage(), -1),
+        std::invalid_argument
+    );
+}
+
+// Verifica que la función lanza una excepción cuando se intenta eliminar más colores de los que existen en la imagen
+TEST_F(CutFreqTest, ThrowsOnExcessiveNumberOfColorsToCut) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    EXPECT_THROW(
+        cutfreq(getTestImage(), 100),
+        std::invalid_argument
+    );
+}
+
+
+// Verifica que se pueden eliminar los colores menos frecuentes sin errores
+TEST_F(CutFreqTest, RemoveLeastFrequentColors) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    PPMImage image = getTestImage();
+    ASSERT_NO_THROW(
+        cutfreq(image, 2)
+    );
+
+    // Verifica que el tamaño de la imagen no ha cambiado
+    EXPECT_EQ(image.width, getTestImage().width);
+    EXPECT_EQ(image.height, getTestImage().height);
+    EXPECT_EQ(image.pixelData.size(), getTestImage().pixelData.size());
+}
+
+// Verifica que la función no cambia los colores si se solicita eliminar 0 colores
+TEST_F(CutFreqTest, NoChangeWhenZeroColorsRemoved) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    PPMImage image = getTestImage();
+    ASSERT_NO_THROW(
+        cutfreq(image, 0)
+    );
+
+    EXPECT_EQ(image.pixelData, getTestImage().pixelData);
+}
+
+// Verifica que se pueden eliminar todos los colores excepto uno
+TEST_F(CutFreqTest, RemoveAllButOneColor) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    PPMImage image = getTestImage();
+    ASSERT_NO_THROW(
+        cutfreq(image, static_cast<int>(image.pixelData.size() / 3) - 1)
+    );
+
+    // Verifica que solo queda un color en la imagen
+    std::unordered_set<uint32_t> uniqueColors;
+    for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
+        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
+                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
+                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        uniqueColors.insert(color);
+    }
+    EXPECT_EQ(uniqueColors.size(), 1);
+}
+
+  // Verifica el comportamiento cuando la imagen tiene un solo color
+  TEST_F(CutFreqTest, SingleColorImage) {
+  PPMImage singleColorImage;
+  singleColorImage.width = TEST_WIDTH;
+  singleColorImage.height = TEST_HEIGHT;
+  singleColorImage.maxValue = MAX_8BIT;
+  singleColorImage.pixelData = {
+    100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100,
+    100, 100, 100, 100, 100, 100, 100, 100, 100
+};
+
+  ASSERT_TRUE(escribirImagenPPM(getInputPath(), singleColorImage));
+
+  ASSERT_NO_THROW(
+      cutfreq(singleColorImage, 1)
+  );
+
+  // Verifica que la imagen siga siendo de un solo color, aunque sea el valor de reemplazo (negro)
+  std::unordered_set<uint32_t> uniqueColors;
+  for (std::size_t i = 0; i < singleColorImage.pixelData.size(); i += 3) {
+    uint32_t color = (static_cast<uint32_t>(singleColorImage.pixelData[i]) << 16) |
+                     (static_cast<uint32_t>(singleColorImage.pixelData[i + 1]) << 8) |
+                     static_cast<uint32_t>(singleColorImage.pixelData[i + 2]);
+    uniqueColors.insert(color);
   }
+  EXPECT_EQ(uniqueColors.size(), 1);
+}
+
+// Verifica el comportamiento cuando se eliminan todos los colores posibles
+TEST_F(CutFreqTest, RemoveAllColors) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    PPMImage image = getTestImage();
+    ASSERT_NO_THROW(
+        cutfreq(image, static_cast<int>(image.pixelData.size() / 3))
+    );
+
+    // Verifica que todos los colores hayan sido reemplazados por el valor predeterminado (negro en este caso)
+    for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
+        EXPECT_EQ(image.pixelData[i], 0);
+        EXPECT_EQ(image.pixelData[i + 1], 0);
+        EXPECT_EQ(image.pixelData[i + 2], 0);
+    }
+}
+
+// Verifica el comportamiento con un número grande de colores a eliminar, que sea igual al número de colores únicos
+TEST_F(CutFreqTest, RemoveExactNumberOfUniqueColors) {
+    ASSERT_TRUE(writeTestImageToDisk());
+
+    PPMImage image = getTestImage();
+    std::unordered_set<uint32_t> uniqueColors;
+    for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
+        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
+                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
+                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        uniqueColors.insert(color);
+    }
+    int uniqueColorsCount = static_cast<int>(uniqueColors.size());
+
+    ASSERT_NO_THROW(
+        cutfreq(image, uniqueColorsCount)
+    );
+
+    // Verifica que la imagen tenga solo un color después de eliminar todos los colores menos uno
+    uniqueColors.clear();
+    for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
+        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
+                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
+                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        uniqueColors.insert(color);
+    }
+    EXPECT_EQ(uniqueColors.size(), 1);
+}
+
 }  // namespace
-
-TEST(CutFreqTest, RemoveNoColors) {
-    ImageAOS image{{BLACK, WHITE}};
-    cutfreq(image, 0);
-    EXPECT_EQ(image.pixels[0], BLACK);
-    EXPECT_EQ(image.pixels[1], WHITE);
-}
-
-TEST(CutFreqTest, RemoveLeastFrequentColor) {
-    ImageAOS image{{BLACK, WHITE, WHITE, GRAY}};
-    cutfreq(image, 1);  // Debe eliminar el color BLACK
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    EXPECT_NE(image.pixels[0], BLACK);
-    EXPECT_EQ(image.pixels[1], WHITE);
-    EXPECT_EQ(image.pixels[2], WHITE);
-    EXPECT_EQ(image.pixels[3], GRAY);
-}
-
-TEST(CutFreqTest, RemoveMultipleColors) {
-    ImageAOS image{{BLACK, WHITE, GRAY, GRAY}};
-    cutfreq(image, 2);  // Debe eliminar los dos colores menos frecuentes
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    EXPECT_NE(image.pixels[0], BLACK);
-    EXPECT_NE(image.pixels[1], WHITE);
-    EXPECT_EQ(image.pixels[2], image.pixels[3]);  // Ambos deben ser reemplazados por un color restante
-}
-
-TEST(CutFreqTest, RemoveAllColorsExceptOne) {
-    ImageAOS image{{BLACK, WHITE, GRAY, RED, GREEN, BLUE}};
-    constexpr int REMOVE_FIVE_COLORS = 5;
-    cutfreq(image, REMOVE_FIVE_COLORS);  // Debe dejar solo un color
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    const Color remainingColor = image.pixels[0];
-    for (const auto& pixel : image.pixels) {
-        EXPECT_EQ(pixel, remainingColor) << "El píxel no coincide con el color restante esperado. Pixel: ("
-                                         << pixel.r << ", " << pixel.g << ", " << pixel.b << "), RemainingColor: ("
-                                         << remainingColor.r << ", " << remainingColor.g << ", " << remainingColor.b
-                                         << ")";
-    }
-}
-
-TEST(CutFreqTest, AllColorsAreFrequent) {
-    ImageAOS image{{BLACK, WHITE, GRAY, RED, GREEN, BLUE}};
-    cutfreq(image, 0);  // No se debe eliminar ningún color
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    EXPECT_EQ(image.pixels[0], BLACK);
-    EXPECT_EQ(image.pixels[1], WHITE);
-    EXPECT_EQ(image.pixels[2], GRAY);
-    EXPECT_EQ(image.pixels[3], RED);
-    EXPECT_EQ(image.pixels[4], GREEN);
-    EXPECT_EQ(image.pixels[5], BLUE);
-}
-
-TEST(CutFreqTest, RemoveMoreColorsThanPresent) {
-    ImageAOS image{{BLACK, WHITE, GRAY}};
-    constexpr int REMOVE_FIVE_COLORS = 5;
-    cutfreq(image, REMOVE_FIVE_COLORS);  // Debe eliminar todos los colores excepto uno
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    const Color remainingColor = image.pixels[0];
-    for (const auto& pixel : image.pixels) {
-        EXPECT_EQ(pixel, remainingColor) << "El píxel no coincide con el color restante esperado. Pixel: ("
-                                         << pixel.r << ", " << pixel.g << ", " << pixel.b << "), RemainingColor: ("
-                                         << remainingColor.r << ", " << remainingColor.g << ", " << remainingColor.b
-                                         << ")";
-    }
-}
-
-TEST(CutFreqTest, ImageWithSingleColor) {
-    ImageAOS image{{BLACK, BLACK, BLACK}};
-    cutfreq(image, 1);  // No debe cambiar nada ya que solo hay un color
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    EXPECT_EQ(image.pixels[0], BLACK);
-    EXPECT_EQ(image.pixels[1], BLACK);
-    EXPECT_EQ(image.pixels[2], BLACK);
-}
-
-TEST(CutFreqTest, ImageWithTwoColorsEquallyFrequent) {
-    ImageAOS image{{RED, GREEN, RED, GREEN}};
-    cutfreq(image, 1);  // Debe eliminar uno de los dos colores
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    const Color remainingColor = image.pixels[0];
-    for (const auto& pixel : image.pixels) {
-        EXPECT_EQ(pixel, remainingColor) << "El píxel no coincide con el color restante esperado. Pixel: ("
-                                         << pixel.r << ", " << pixel.g << ", " << pixel.b << "), RemainingColor: ("
-                                         << remainingColor.r << ", " << remainingColor.g << ", " << remainingColor.b
-                                         << ")";
-    }
-}
-
-TEST(CutFreqTest, ComplexImageReplacement) {
-    ImageAOS image{{RED, GREEN, BLUE, RED, BLUE, GREEN, BLACK, WHITE, GRAY}};
-    constexpr int REMOVE_SIX_COLORS = 6;
-    cutfreq(image, REMOVE_SIX_COLORS);  // Debe dejar solo los tres colores más frecuentes
-    printImagePixels(image);
-    std::cout << "Verificando los resultados después de aplicar cutfreq..." << "\n";
-    const Color remainingColor1 = image.pixels[0];
-    for (const auto& pixel : image.pixels) {
-        EXPECT_TRUE(pixel == remainingColor1 || pixel == BLUE || pixel == GREEN)
-            << "El píxel no coincide con los colores restantes esperados. Pixel: ("
-            << pixel.r << ", " << pixel.g << ", " << pixel.b << ")";
-    }
-}
-
-void runTests(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    RUN_ALL_TESTS();
-}
-
-int main(int argc, char** argv) {
-    runTests(argc, argv);
-    return 0;
-}
-*/
