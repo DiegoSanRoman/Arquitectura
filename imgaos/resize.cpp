@@ -163,34 +163,31 @@ namespace {
 
 //int main(int argc, char* argv[]) {
 void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
-    std::cout << "Realizando la operación de resize en imgaos con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
-    std::cout << "Archivo de entrada: " << inputFile << "\n";
-    std::cout << "Archivo de salida: " << outputFile << "\n";
+  std::cout << "Realizando la operación de resize en imgaos con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+  std::cout << "Archivo de entrada: " << inputFile << "\n";
+  std::cout << "Archivo de salida: " << outputFile << "\n";
 
-    try {
-        validateSize(newWidth);
-        validateSize(newHeight);
+  // Valida los tamaños y lanza excepciones si son inválidos
+  validateSize(newWidth);
+  validateSize(newHeight);
 
-        PPMImage inputImage{};
-        if (!leerImagenPPM(inputFile, inputImage)) {  // Leer la imagen original
-            throw std::runtime_error("Error al leer el archivo de entrada");
-        }
+  PPMImage inputImage{};
+  if (!leerImagenPPM(inputFile, inputImage)) {
+    throw std::runtime_error("Error al leer el archivo de entrada");
+  }
 
-        // Leer los datos de la imagen original
-        auto originalData = leerImagenOriginal(inputImage);
+  // Leer los datos de la imagen original
+  auto originalData = leerImagenOriginal(inputImage);
 
-        const ImageDimensions dims = {.width = inputImage.width, .height = inputImage.height, .widthNueva = newWidth, .heightNueva = newHeight};
-        auto scaledData = escalarImagen(originalData, dims); // Escalar la imagen
+  const ImageDimensions dims = {.width = inputImage.width, .height = inputImage.height, .widthNueva = newWidth, .heightNueva = newHeight};
+  auto scaledData = escalarImagen(originalData, dims); // Escalar la imagen
 
-        // Crear la imagen escalada en formato PPMImage
-        const PPMImage outputImage = crearImagenEscalada(scaledData, inputImage, newWidth, newHeight);
+  // Crear la imagen escalada en formato PPMImage
+  const PPMImage outputImage = crearImagenEscalada(scaledData, inputImage, newWidth, newHeight);
 
-        if (!escribirImagenPPM(outputFile, outputImage)) {
-            throw std::runtime_error("Error al escribir el archivo de salida");
-        }
-        std::cout << "Operación completada exitosamente.\n";
-    } catch (const std::exception& e) {
-        std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
-        throw;
-    }
+  if (!escribirImagenPPM(outputFile, outputImage)) {
+    throw std::runtime_error("Error al escribir el archivo de salida");
+  }
+  std::cout << "Operación completada exitosamente.\n";
 }
+

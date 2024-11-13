@@ -3,7 +3,8 @@
 add_executable(utest-imgaos
         cutfreq-utest.cpp
         maxlevel-utest.cpp
-        compress-utest.cpp)
+        compress-utest.cpp
+        resize-utest.cpp)
 # Library dependencies
 target_link_libraries(utest-imgaos
         PRIVATE
