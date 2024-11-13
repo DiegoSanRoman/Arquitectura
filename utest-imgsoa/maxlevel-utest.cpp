@@ -18,7 +18,6 @@ constexpr unsigned int TEST_WIDTH = 2U;
 constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
-constexpr unsigned int THIRD_16BIT = 21845U;
 
 class MaxLevelSoATest : public ::testing::Test {
 private:

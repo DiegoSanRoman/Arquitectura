@@ -18,6 +18,7 @@ constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
 constexpr unsigned int THIRD_16BIT = 21845U;
+  constexpr unsigned int BLACK = 12U;
 
 class MaxLevelTest : public ::testing::Test {
 private:
@@ -309,7 +310,7 @@ TEST_F(MaxLevelTest, PreserveBlackPixels) {
     blackImage.width = 2;
     blackImage.height = 2;
     blackImage.maxValue = static_cast<int>(MAX_8BIT);
-    blackImage.pixelData = std::vector<unsigned char>(12, 0);  // 4 píxeles negros
+    blackImage.pixelData = std::vector<unsigned char>(BLACK, 0);  // 4 píxeles negros
 
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), blackImage));
 
