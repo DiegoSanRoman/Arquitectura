@@ -2,7 +2,9 @@
 # For example, you may have one ∗_test.cpp for each ∗.cpp in common
 add_executable(utest-common
         progargs-test.cpp
-        binaryio-test.cpp)
+        binario-test.cpp
+        info-test.cpp
+        process_functions-test.cpp)
 # Library dependencies
 target_link_libraries (utest-common
         PRIVATE
