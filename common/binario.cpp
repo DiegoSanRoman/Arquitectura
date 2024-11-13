@@ -77,9 +77,9 @@ namespace {
       const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Redimensionar los canales RGB
-      image.redChannel.resize(totalPixels);
-      image.greenChannel.resize(totalPixels);
-      image.blueChannel.resize(totalPixels);
+      image.redChannel.resize(totalBytesPerChannel);
+      image.greenChannel.resize(totalBytesPerChannel);
+      image.blueChannel.resize(totalBytesPerChannel);
 
       // Crear un búfer intermedio para leer cada componente de color
       std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
@@ -137,10 +137,10 @@ namespace {
       const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Crear un búfer intermedio para almacenar los datos RGB en formato binario
-      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
+      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL * 2);
 
       // Copiar los datos de los canales RGB al búfer intermedio
-      for (std::size_t i = 0; i < totalPixels; ++i) {
+      for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
         buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(image.redChannel[i]);
         buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(image.greenChannel[i]);
         buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(image.blueChannel[i]);
@@ -155,7 +155,7 @@ namespace {
         swapBytes(tempGreen);
         swapBytes(tempBlue);
 
-        for (std::size_t i = 0; i < totalPixels; ++i) {
+        for (std::size_t i = 0; i < totalBytesPerChannel; ++i) {
           buffer[i * COMPONENTS_PER_PIXEL] = static_cast<char>(tempRed[i]);
           buffer[(i * COMPONENTS_PER_PIXEL) + 1] = static_cast<char>(tempGreen[i]);
           buffer[(i * COMPONENTS_PER_PIXEL) + 2] = static_cast<char>(tempBlue[i]);
