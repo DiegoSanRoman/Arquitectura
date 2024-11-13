@@ -124,7 +124,7 @@ namespace {
   };
     interpolacionBilineal(original, interpolParams, colorInterpolado);
   }
-
+/*
   void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
       const size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
       escalada.redChannel.resize(totalPixels);
@@ -146,12 +146,11 @@ namespace {
               const double yRatio = y_original - yLow;
 
               Color colorInterpolado;
-              /*procesarPixelEscalado(original, colorInterpolado, xLow, xHigh, yLow, yHigh, xRatio, yRatio);*/
               const EscaladoParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
               procesarPixelEscalado(original, colorInterpolado, params);
 
 
-              /*const auto idx = static_cast<size_t>((y_nueva * escalada.width) + x_nueva);*/
+              const auto idx = static_cast<size_t>((y_nueva * escalada.width) + x_nueva);
               const auto idx = (static_cast<size_t>(y_nueva) * static_cast<size_t>(escalada.width)) + static_cast<size_t>(x_nueva);
               escalada.redChannel[idx] = colorInterpolado.red;
               escalada.greenChannel[idx] = colorInterpolado.green;
@@ -159,6 +158,44 @@ namespace {
           }
       }
   }
+*/
+
+  void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
+    const size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
+    escalada.redChannel.resize(totalPixels);
+    escalada.greenChannel.resize(totalPixels);
+    escalada.blueChannel.resize(totalPixels);
+
+    // Evitar divisiones por cero para imágenes de 1x1
+    const double xScale = (escalada.width > 1) ? (static_cast<double>(original.width - 1) / (escalada.width - 1)) : 0.0;
+    const double yScale = (escalada.height > 1) ? (static_cast<double>(original.height - 1) / (escalada.height - 1)) : 0.0;
+
+    for (int y_nueva = 0; y_nueva < escalada.height; ++y_nueva) {
+      for (int x_nueva = 0; x_nueva < escalada.width; ++x_nueva) {
+        // Evitar cálculos incorrectos cuando width o height son 1
+        const double x_original = (escalada.width > 1) ? x_nueva * xScale : 0.0;
+        const double y_original = (escalada.height > 1) ? y_nueva * yScale : 0.0;
+
+        const double xLow = std::floor(x_original);
+        const double xHigh = std::ceil(x_original);
+        const double yLow = std::floor(y_original);
+        const double yHigh = std::ceil(y_original);
+
+        const double xRatio = x_original - xLow;
+        const double yRatio = y_original - yLow;
+
+        Color colorInterpolado;
+        const EscaladoParams params = {.xLow = xLow, .xHigh = xHigh, .yLow = yLow, .yHigh = yHigh, .xRatio = xRatio, .yRatio = yRatio};
+        procesarPixelEscalado(original, colorInterpolado, params);
+
+        const auto idx = (static_cast<size_t>(y_nueva) * static_cast<size_t>(escalada.width)) + static_cast<size_t>(x_nueva);
+        escalada.redChannel[idx] = colorInterpolado.red;
+        escalada.greenChannel[idx] = colorInterpolado.green;
+        escalada.blueChannel[idx] = colorInterpolado.blue;
+      }
+    }
+  }
+
 
 
   PPMImage convertirSOAAImagePPM(const ImageSOA& imagenSOA) {
@@ -187,32 +224,30 @@ namespace {
 }
 
 void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
-  std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+  std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: "
+            << newWidth << " " << newHeight << "\n";
   std::cout << "Archivo de entrada: " << inputFile << "\n";
   std::cout << "Archivo de salida: " << outputFile << "\n";
-  try {
-    validateValue(newWidth);
-    validateValue(newHeight);
 
-    PPMImage inputImage{};
-    if (!leerImagenPPM(inputFile, inputImage)) {
-      throw std::runtime_error("Error al leer el archivo de entrada.");
-    }
+  // Validaciones que pueden lanzar std::invalid_argument
+  validateValue(newWidth);
+  validateValue(newHeight);
 
-    const ImageSOA imageSOA = leerImagenSOA(inputImage);
-    /*ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(newWidth, newHeight);*/
-    const ImageDimensions dims = {.width=newWidth, .height=newHeight};
-    ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(dims);
-
-
-    escalarImagen(imageSOA, imagenEscaladaSOA);
-
-    const PPMImage outputImage = convertirSOAAImagePPM(imagenEscaladaSOA);
-    if (!escribirImagenPPM(outputFile, outputImage)) {
-      throw std::runtime_error("Error al guardar el archivo de salida.");
-    }
-    std::cout << "Operación completada exitosamente.\n";
-  } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << "\n";
+  PPMImage inputImage{};
+  if (!leerImagenPPM(inputFile, inputImage)) {
+    throw std::runtime_error("Error al leer el archivo de entrada.");
   }
+
+  const ImageSOA imageSOA = leerImagenSOA(inputImage);
+  const ImageDimensions dims = {.width = newWidth, .height = newHeight};
+  ImageSOA imagenEscaladaSOA = inicializarImagenEscalada(dims);
+
+  escalarImagen(imageSOA, imagenEscaladaSOA);
+
+  const PPMImage outputImage = convertirSOAAImagePPM(imagenEscaladaSOA);
+  if (!escribirImagenPPM(outputFile, outputImage)) {
+    throw std::runtime_error("Error al guardar el archivo de salida.");
+  }
+
+  std::cout << "Operación completada exitosamente.\n";
 }
