@@ -45,7 +45,6 @@ namespace {
 
     void swapBytes(std::vector<unsigned char>& data) {
         for (std::size_t i = 0; i < data.size(); i += 2) {
-            std::swap(data[i], data[i + 1]);
         }
     }
 
@@ -74,15 +73,14 @@ namespace {
   // Leer datos de píxeles en formato SOA
   bool leerDatosPixeles(std::ifstream& file, PPMImageSoA& image, int bytesPerComponent) {
       const std::size_t totalPixels = static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height);
-      const std::size_t totalBytesPerChannel = totalPixels * static_cast<std::size_t>(bytesPerComponent);
 
       // Redimensionar los canales RGB
-      image.redChannel.resize(totalBytesPerChannel);
-      image.greenChannel.resize(totalBytesPerChannel);
-      image.blueChannel.resize(totalBytesPerChannel);
+      image.redChannel.resize(totalPixels);
+      image.greenChannel.resize(totalPixels);
+      image.blueChannel.resize(totalPixels);
 
       // Crear un búfer intermedio para leer cada componente de color
-      std::vector<char> buffer(totalBytesPerChannel * COMPONENTS_PER_PIXEL);
+      std::vector<char> buffer(totalPixels * COMPONENTS_PER_PIXEL);
 
       if (!file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()))) {
         std::cerr << "Error al leer los datos de la imagen.\n";
