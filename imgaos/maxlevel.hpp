@@ -15,7 +15,7 @@
  * @param outputFile Ruta donde se guardará la imagen PPM resultante
  * @param newMaxValue Nuevo valor máximo para los colores (1-65535)
  * @throws std::invalid_argument si newMaxValue está fuera del rango válido
- * @throws std::runtime_error si hay errores al leer o escribir los archivos
+ * @throws std::runtime_error si hay errores al leer o escribir los archivoss
  */
 
 // Función para realizar la operación de maxlevel, le pasamos el archivo de entrada, el archivo de salida y el nuevo valor máximo
