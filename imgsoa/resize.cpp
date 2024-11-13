@@ -72,10 +72,12 @@ namespace {
     return color1 + (factor_itp * (color2 - color1));
   }
 
+  /*Cambio de unsigned char a double*/
   unsigned char interpolarComponente(const std::vector<unsigned char>& channel, const IndicesInterpolacion& indices, double xRatio, double yRatio) {
     const double interpoladoX1 = interpolar(channel.at(indices.index00), channel.at(indices.index01), xRatio);
     const double interpoladoX2 = interpolar(channel.at(indices.index10), channel.at(indices.index11), xRatio);
     const double top = interpolar(interpoladoX1, interpoladoX2, yRatio);
+
     return static_cast<unsigned char>(clamp(top, 0.0, 255.0));
   }
 
@@ -127,8 +129,6 @@ namespace {
   }
 
 
-
-
   PPMImage convertirSOAAImagePPM(const ImageSOA& imagenSOA) {
     PPMImage outputImage;
     outputImage.width = imagenSOA.width;
@@ -155,6 +155,9 @@ namespace {
 }
 
 void performResizeOperation(const std::string& inputFile, const std::string& outputFile, int newWidth, int newHeight) {
+  std::cout << "Realizando la operación de resize en imgsoa con el nuevo tamaño: " << newWidth << " " << newHeight << "\n";
+  std::cout << "Archivo de entrada: " << inputFile << "\n";
+  std::cout << "Archivo de salida: " << outputFile << "\n";
   try {
     validateValue(newWidth);
     validateValue(newHeight);
@@ -173,6 +176,7 @@ void performResizeOperation(const std::string& inputFile, const std::string& out
     if (!escribirImagenPPM(outputFile, outputImage)) {
       throw std::runtime_error("Error al guardar el archivo de salida.");
     }
+    std::cout << "Operación completada exitosamente.\n";
   } catch (const std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
   }
