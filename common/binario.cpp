@@ -45,6 +45,7 @@ namespace {
 
     void swapBytes(std::vector<unsigned char>& data) {
         for (std::size_t i = 0; i < data.size(); i += 2) {
+            std::swap(data[i], data[i + 1]);
         }
     }
 
