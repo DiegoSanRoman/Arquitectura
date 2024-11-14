@@ -1,9 +1,10 @@
 #!/bin/sh
+mkdir act-out-compress
 #test con deer_small
-../build/imtool-aos/imtool-aos ../input/deer-small.ppm ../output/deer-compress.cppm compress
+../build/imtool-aos/imtool-aos ../input/deer-small.ppm act-out-compress/deer-compress.cppm compress
 
 #Salida de mi funcion
-deer_out="../output/deer-compress.cppm"
+deer_out="act-out-compress/deer-compress.cppm"
 #Salida de referencia
 deer_exp="exp-out-compress/deer-small.cppm"
 
@@ -15,10 +16,10 @@ else
 fi
 
 #test con lake_small
-../build/imtool-aos/imtool-aos ../input/lake-small.ppm ../output/lake-compress.cppm compress
+../build/imtool-aos/imtool-aos ../input/lake-small.ppm act-out-compress/lake-compress.cppm compress
 
 #Salida de mi funcion
-lake_out="../output/lake-compress.cppm"
+lake_out="act-out-compress/lake-compress.cppm"
 #Salida de referencia
 lake_exp="exp-out-compress/lake-small.cppm"
 
