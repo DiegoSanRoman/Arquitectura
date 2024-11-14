@@ -4,7 +4,6 @@
 #include "../common/binario.hpp"            // Para leerImagenPPM, escribirImagenPPM, info
 #include "../imgaos/cutfreq.hpp"            // Para cutfreq
 #include "../imgaos/resize.hpp"             // Para performResizeOperation
-#include "../common/process_functions.hpp"  // Para validateMaxlevelParams, processMaxlevel
 #include "../common/info.hpp"               // Para info
 #include "../imgaos/compress.hpp"           // Para compress
 #include <iostream>                         // Para std::cout, std::cerr
@@ -14,6 +13,21 @@
 
 namespace {
   using namespace common;
+  constexpr int MAX_COLOR_VALUE = 65535;
+
+  // Función para validar parámetros de la operación "maxlevel"
+  void validateMaxlevelParams(const ProgramArgs& args) {
+    if (args.getAdditionalParams().size() != 1) {
+      throw std::invalid_argument("Invalid number of extra arguments for maxlevel: " +
+                                  std::to_string(args.getAdditionalParams().size() + 3));
+    }
+
+    const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
+    if (newMaxValue < 0 || newMaxValue > MAX_COLOR_VALUE) {
+      throw std::invalid_argument("The max level must be between 0 and " +
+                                  std::to_string(MAX_COLOR_VALUE));
+    }
+  }
 
   // Función para validar parámetros de la operación "maxlevel"
   void processMaxlevel(const ProgramArgs& args) {

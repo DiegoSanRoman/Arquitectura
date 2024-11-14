@@ -4,7 +4,7 @@ add_executable(utest-common
         progargs-test.cpp
         binario-test.cpp
         info-test.cpp
-        process_functions-test.cpp)
+)
 # Library dependencies
 target_link_libraries (utest-common
         PRIVATE

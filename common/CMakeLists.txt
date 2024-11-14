@@ -3,8 +3,6 @@ add_library(common
         progargs.cpp
         binario.cpp
         binario.hpp
-        process_functions.hpp
-        process_functions.cpp
         info.cpp
         info.hpp
 )
