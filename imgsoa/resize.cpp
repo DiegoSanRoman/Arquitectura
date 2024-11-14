@@ -108,13 +108,6 @@ namespace {
     colorInterpolado.green = interpolarComponente(img.greenChannel, indices, params.xRatio, params.yRatio);
     colorInterpolado.blue = interpolarComponente(img.blueChannel, indices, params.xRatio, params.yRatio);
   }
-  /*
-  void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado,
-                            double xLow, double xHigh, double yLow, double yHigh, double xRatio, double yRatio) {
-    const InterpolacionParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
-    interpolacionBilineal(original, params, colorInterpolado);
-  }
-  */
   void procesarPixelEscalado(const ImageSOA& original, Color& colorInterpolado, const EscaladoParams& params) {
     const InterpolacionParams interpolParams = {
       .xLow = params.xLow,
@@ -126,41 +119,6 @@ namespace {
   };
     interpolacionBilineal(original, interpolParams, colorInterpolado);
   }
-/*
-  void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
-      const size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
-      escalada.redChannel.resize(totalPixels);
-      escalada.greenChannel.resize(totalPixels);
-      escalada.blueChannel.resize(totalPixels);
-
-      // Precalcular las relaciones xRatio y yRatio fuera del bucle.
-      for (int y_nueva = 0; y_nueva < escalada.height; ++y_nueva) {
-          for (int x_nueva = 0; x_nueva < escalada.width; ++x_nueva) {
-              const double x_original = static_cast<double>(x_nueva) * ((static_cast<double>(original.width) - 1) / (escalada.width - 1));
-              const double y_original = static_cast<double>(y_nueva) * ((static_cast<double>(original.height) - 1) / (escalada.height - 1));
-
-              const double xLow = std::floor(x_original);
-              const double xHigh = std::ceil(x_original);
-              const double yLow = std::floor(y_original);
-              const double yHigh = std::ceil(y_original);
-
-              const double xRatio = x_original - xLow;
-              const double yRatio = y_original - yLow;
-
-              Color colorInterpolado;
-              const EscaladoParams params = {.xLow=xLow, .xHigh=xHigh, .yLow=yLow, .yHigh=yHigh, .xRatio=xRatio, .yRatio=yRatio};
-              procesarPixelEscalado(original, colorInterpolado, params);
-
-
-              const auto idx = static_cast<size_t>((y_nueva * escalada.width) + x_nueva);
-              const auto idx = (static_cast<size_t>(y_nueva) * static_cast<size_t>(escalada.width)) + static_cast<size_t>(x_nueva);
-              escalada.redChannel[idx] = colorInterpolado.red;
-              escalada.greenChannel[idx] = colorInterpolado.green;
-              escalada.blueChannel[idx] = colorInterpolado.blue;
-          }
-      }
-  }
-*/
 
   void escalarImagen(const ImageSOA& original, ImageSOA& escalada) {
     const size_t totalPixels = static_cast<size_t>(escalada.width) * static_cast<size_t>(escalada.height);
