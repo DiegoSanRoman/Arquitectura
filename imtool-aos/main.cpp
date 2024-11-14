@@ -33,7 +33,7 @@ namespace {
   void processMaxlevel(const ProgramArgs& args) {
     validateMaxlevelParams(args);
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
-    const FilePaths paths = {args.getInputFile(), args.getOutputFile()};
+    const FilePaths paths = {.inputFile=args.getInputFile(), .outputFile=args.getOutputFile()};
     performMaxLevelOperation(paths, newMaxValue);
   }
 

@@ -33,7 +33,7 @@ compare_files() {
 # Test funcional para lake-large con cutfreq de 100000
 echo "TEST - lake-large con cutfreq = 100000"
 expected="exp-out-cutfreq/lake-large-100K.ppm"
-input="../input/lake-large.ppm"
+input="../in/lake-large.ppm"
 output="act-out-cutfreq/lake-large-100K-aos.ppm"
 
 mkdir -p "$(dirname "$expected")" "$(dirname "$input")" "$(dirname "$output")"

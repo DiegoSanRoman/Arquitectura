@@ -6,11 +6,19 @@
 #include <filesystem>
 #include <unordered_set>
 
+
 namespace {
 
 constexpr unsigned int MAX_8BIT = 255U;
 constexpr unsigned int TEST_WIDTH = 3U;
 constexpr unsigned int TEST_HEIGHT = 3U;
+constexpr unsigned int COLOR_RED = 255U;
+constexpr unsigned int COLOR_GREEN = 128U;
+constexpr unsigned int COLOR_BLUE = 64U;
+constexpr unsigned int COLOR_GRAY = 192U;
+constexpr unsigned int SHIFT_RED = 16;
+constexpr unsigned int SHIFT_GREEN = 8;
+constexpr unsigned int COLOR_SINGLE = 100U;
 
 class CutFreqTest : public ::testing::Test {
 private:
@@ -24,9 +32,9 @@ protected:
         testImage.height = TEST_HEIGHT;
         testImage.maxValue = MAX_8BIT;
         testImage.pixelData = {
-            255, 0, 0,     0, 255, 0,     0, 0, 255,
-            255, 255, 0,   0, 255, 255,   255, 0, 255,
-            128, 128, 128, 64, 64, 64,    192, 192, 192
+            COLOR_RED, 0, 0,      0, COLOR_RED, 0,      0, 0, COLOR_RED,
+            COLOR_RED, COLOR_RED, 0,  0, COLOR_RED, COLOR_RED,  COLOR_RED, 0, COLOR_RED,
+            COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE,  COLOR_GRAY, COLOR_GRAY, COLOR_GRAY
         };
     }
 
@@ -65,6 +73,22 @@ TEST_F(CutFreqTest, ThrowsOnExcessiveNumberOfColorsToCut) {
     );
 }
 
+// Verifica el comportamiento con una imagen vacía
+TEST_F(CutFreqTest, HandleEmptyImage) {
+    PPMImage emptyImage;
+    emptyImage.width = 0;
+    emptyImage.height = 0;
+    emptyImage.maxValue = static_cast<int>(MAX_8BIT);
+    ASSERT_TRUE(escribirImagenPPM(getInputPath(), emptyImage));
+
+    ASSERT_NO_THROW(
+        cutfreq(emptyImage, 1)
+    );
+
+    EXPECT_EQ(emptyImage.width, 0);
+    EXPECT_EQ(emptyImage.height, 0);
+    EXPECT_TRUE(emptyImage.pixelData.empty());
+}
 
 // Verifica que se pueden eliminar los colores menos frecuentes sin errores
 TEST_F(CutFreqTest, RemoveLeastFrequentColors) {
@@ -105,41 +129,41 @@ TEST_F(CutFreqTest, RemoveAllButOneColor) {
     // Verifica que solo queda un color en la imagen
     std::unordered_set<uint32_t> uniqueColors;
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
-        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
-                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
-                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        const uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << SHIFT_RED) |
+                               (static_cast<uint32_t>(image.pixelData[i + 1]) << SHIFT_GREEN) |
+                               static_cast<uint32_t>(image.pixelData[i + 2]);
         uniqueColors.insert(color);
     }
     EXPECT_EQ(uniqueColors.size(), 1);
 }
 
-  // Verifica el comportamiento cuando la imagen tiene un solo color
-  TEST_F(CutFreqTest, SingleColorImage) {
-  PPMImage singleColorImage;
-  singleColorImage.width = TEST_WIDTH;
-  singleColorImage.height = TEST_HEIGHT;
-  singleColorImage.maxValue = MAX_8BIT;
-  singleColorImage.pixelData = {
-    100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100,
-    100, 100, 100, 100, 100, 100, 100, 100, 100
-};
+// Verifica el comportamiento cuando la imagen tiene un solo color
+TEST_F(CutFreqTest, SingleColorImage) {
+    PPMImage singleColorImage;
+    singleColorImage.width = TEST_WIDTH;
+    singleColorImage.height = TEST_HEIGHT;
+    singleColorImage.maxValue = MAX_8BIT;
+    singleColorImage.pixelData = {
+        COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE,
+        COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE,
+        COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE, COLOR_SINGLE
+    };
 
-  ASSERT_TRUE(escribirImagenPPM(getInputPath(), singleColorImage));
+    ASSERT_TRUE(escribirImagenPPM(getInputPath(), singleColorImage));
 
-  ASSERT_NO_THROW(
-      cutfreq(singleColorImage, 1)
-  );
+    ASSERT_NO_THROW(
+        cutfreq(singleColorImage, 1)
+    );
 
-  // Verifica que la imagen siga siendo de un solo color, aunque sea el valor de reemplazo (negro)
-  std::unordered_set<uint32_t> uniqueColors;
-  for (std::size_t i = 0; i < singleColorImage.pixelData.size(); i += 3) {
-    uint32_t color = (static_cast<uint32_t>(singleColorImage.pixelData[i]) << 16) |
-                     (static_cast<uint32_t>(singleColorImage.pixelData[i + 1]) << 8) |
-                     static_cast<uint32_t>(singleColorImage.pixelData[i + 2]);
-    uniqueColors.insert(color);
-  }
-  EXPECT_EQ(uniqueColors.size(), 1);
+    // Verifica que la imagen siga siendo de un solo color, aunque sea el valor de reemplazo (negro)
+    std::unordered_set<uint32_t> uniqueColors;
+    for (std::size_t i = 0; i < singleColorImage.pixelData.size(); i += 3) {
+        const uint32_t color = (static_cast<uint32_t>(singleColorImage.pixelData[i]) << SHIFT_RED) |
+                               (static_cast<uint32_t>(singleColorImage.pixelData[i + 1]) << SHIFT_GREEN) |
+                               static_cast<uint32_t>(singleColorImage.pixelData[i + 2]);
+        uniqueColors.insert(color);
+    }
+    EXPECT_EQ(uniqueColors.size(), 1);
 }
 
 // Verifica el comportamiento cuando se eliminan todos los colores posibles
@@ -166,12 +190,12 @@ TEST_F(CutFreqTest, RemoveExactNumberOfUniqueColors) {
     PPMImage image = getTestImage();
     std::unordered_set<uint32_t> uniqueColors;
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
-        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
-                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
-                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        const uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << SHIFT_RED) |
+                               (static_cast<uint32_t>(image.pixelData[i + 1]) << SHIFT_GREEN) |
+                               static_cast<uint32_t>(image.pixelData[i + 2]);
         uniqueColors.insert(color);
     }
-    int uniqueColorsCount = static_cast<int>(uniqueColors.size());
+    const int uniqueColorsCount = static_cast<int>(uniqueColors.size());
 
     ASSERT_NO_THROW(
         cutfreq(image, uniqueColorsCount)
@@ -180,9 +204,9 @@ TEST_F(CutFreqTest, RemoveExactNumberOfUniqueColors) {
     // Verifica que la imagen tenga solo un color después de eliminar todos los colores menos uno
     uniqueColors.clear();
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
-        uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << 16) |
-                         (static_cast<uint32_t>(image.pixelData[i + 1]) << 8) |
-                         static_cast<uint32_t>(image.pixelData[i + 2]);
+        const uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << SHIFT_RED) |
+                               (static_cast<uint32_t>(image.pixelData[i + 1]) << SHIFT_GREEN) |
+                               static_cast<uint32_t>(image.pixelData[i + 2]);
         uniqueColors.insert(color);
     }
     EXPECT_EQ(uniqueColors.size(), 1);
