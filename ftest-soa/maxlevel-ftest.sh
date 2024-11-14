@@ -53,14 +53,14 @@ compare_files() {
 echo "TEST - deer-small con maxvalue = 255"
 expected="exp-out-maxlevel/deer-small-255.ppm"
 input="../input/deer-small.ppm"
-output="act-out-maxlevel/deer-small-255-aos.ppm"
+output="act-out-maxlevel/deer-small-255-soa.ppm"
 
 mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -74,7 +74,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 255
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 255
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."
@@ -101,14 +101,14 @@ rm "$temp_file1" "$temp_file2"
 echo "TEST - deer-small con maxvalue = 65535"
 expected="exp-out-maxlevel/deer-small-65535.ppm"
 input="../input/deer-small.ppm"
-output="act-out-maxlevel/deer-small-65535-aos.ppm"
+output="act-out-maxlevel/deer-small-65535-soa.ppm"
 
 mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -122,7 +122,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 65535
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 65535
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."
@@ -149,14 +149,14 @@ rm "$temp_file1" "$temp_file2"
 echo "TEST - deer-small con maxvalue = 100"
 expected="exp-out-maxlevel/deer-small-100.ppm"
 input="../input/deer-small.ppm"
-output="act-out-maxlevel/deer-small-100-aos.ppm"
+output="act-out-maxlevel/deer-small-100-soa.ppm"
 
 mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -170,7 +170,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 100
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 100
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."
@@ -203,8 +203,8 @@ mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -218,7 +218,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 1000
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 1000
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."
@@ -245,14 +245,14 @@ rm "$temp_file1" "$temp_file2"
 echo "TEST - lake-small con maxvalue = 255"
 expected="exp-out-maxlevel/lake-small-255.ppm"
 input="../input/lake-small.ppm"
-output="act-out-maxlevel/lake-small-255-aos.ppm"
+output="act-out-maxlevel/lake-small-255-soa.ppm"
 
 mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -266,7 +266,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 255
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 255
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."
@@ -293,14 +293,14 @@ rm "$temp_file1" "$temp_file2"
 echo "TEST - lake-small con maxvalue = 65535"
 expected="exp-out-maxlevel/lake-small-65535.ppm"
 input="../input/lake-small.ppm"
-output="act-out-maxlevel/lake-small-65535-aos.ppm"
+output="act-out-maxlevel/lake-small-65535-soa.ppm"
 
 mkdir -p "$(dirname "$expected")"
 mkdir -p "$(dirname "$input")"
 mkdir -p "$(dirname "$output")"
 
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
+if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
+  echo "Error: ../build/imtool-soa/imtool-soa no existe."
   exit 1
 fi
 
@@ -314,7 +314,7 @@ if [ ! -f "$input" ]; then
   exit 1
 fi
 
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 65535
+../build/imtool-soa/imtool-soa "$input" "$output" maxlevel 65535
 
 if [ ! -f "$output" ]; then
   echo "Error: $output no se creó."

@@ -85,8 +85,6 @@ void performMaxLevelOperation(const std::string& inputFile, const std::string& o
             throw std::runtime_error("Error al leer el archivo de entrada");
         }
 
-        std::cout << "La intensidad máxima del archivo de entrada es: " << inputImage.maxValue << "\n";
-
         PPMImage outputImage{};
         outputImage.width = inputImage.width;
         outputImage.height = inputImage.height;
