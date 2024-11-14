@@ -5,7 +5,7 @@
 #include <string>
 
 TEST(ProgramArgsTest, ParsesMinimumArgumentsCorrectly) {
-    std::vector<std::string> args = {"program", "input.txt", "output.txt", "compress"};
+    std::vector<std::string> args = {"program", "in.txt", "output.txt", "compress"};
     std::vector<char*> argv;
     argv.reserve(args.size());
     for (auto& arg : args) {
@@ -14,14 +14,14 @@ TEST(ProgramArgsTest, ParsesMinimumArgumentsCorrectly) {
     int const argc = static_cast<int>(argv.size());
 
     ProgramArgs const parsedArgs(argc, argv.data());
-    EXPECT_EQ(parsedArgs.getInputFile(), "input.txt");
+    EXPECT_EQ(parsedArgs.getInputFile(), "in.txt");
     EXPECT_EQ(parsedArgs.getOutputFile(), "output.txt");
     EXPECT_EQ(parsedArgs.getOperation(), "compress");
     EXPECT_TRUE(parsedArgs.getAdditionalParams().empty());
 }
 
 TEST(ProgramArgsTest, ParsesAdditionalArgumentsCorrectly) {
-    std::vector<std::string> args = {"program", "input.txt", "output.txt", "compress", "param1", "param2"};
+    std::vector<std::string> args = {"program", "in.txt", "output.txt", "compress", "param1", "param2"};
     std::vector<char*> argv;
     argv.reserve(args.size());
     for (auto& arg : args) {
@@ -30,7 +30,7 @@ TEST(ProgramArgsTest, ParsesAdditionalArgumentsCorrectly) {
     int const argc = static_cast<int>(argv.size());
 
     ProgramArgs const parsedArgs(argc, argv.data());
-    EXPECT_EQ(parsedArgs.getInputFile(), "input.txt");
+    EXPECT_EQ(parsedArgs.getInputFile(), "in.txt");
     EXPECT_EQ(parsedArgs.getOutputFile(), "output.txt");
     EXPECT_EQ(parsedArgs.getOperation(), "compress");
 
@@ -41,7 +41,7 @@ TEST(ProgramArgsTest, ParsesAdditionalArgumentsCorrectly) {
 }
 
 TEST(ProgramArgsTest, ThrowsExceptionOnInsufficientArguments) {
-    std::vector<std::string> args = {"program", "input.txt", "output.txt"};
+    std::vector<std::string> args = {"program", "in.txt", "output.txt"};
     std::vector<char*> argv;
     argv.reserve(args.size());
     for (auto& arg : args) {
@@ -55,7 +55,7 @@ TEST(ProgramArgsTest, ThrowsExceptionOnInsufficientArguments) {
 }
 
 TEST(ProgramArgsTest, EmptyAdditionalParamsWhenOnlyRequiredArgsProvided) {
-    std::vector<std::string> args = {"program", "input.txt", "output.txt", "operation"};
+    std::vector<std::string> args = {"program", "in.txt", "output.txt", "operation"};
     std::vector<char*> argv;
     argv.reserve(args.size());
     for (auto& arg : args) {
@@ -68,7 +68,7 @@ TEST(ProgramArgsTest, EmptyAdditionalParamsWhenOnlyRequiredArgsProvided) {
 }
 
 TEST(ProgramArgsTest, ParsesComplexAdditionalArgumentsCorrectly) {
-    std::vector<std::string> args = {"program", "input.txt", "output.txt", "compress", "param1", "param with spaces", "param3"};
+    std::vector<std::string> args = {"program", "in.txt", "output.txt", "compress", "param1", "param with spaces", "param3"};
     std::vector<char*> argv;
     argv.reserve(args.size());
     for (auto& arg : args) {

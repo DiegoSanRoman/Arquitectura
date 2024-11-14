@@ -66,7 +66,7 @@ make
 La aplicación puede ejecutarse con distintos parámetros según la operación que se quiera realizar. Ejemplo:
 
 ```bash
-./imtool-soa input.ppm output.ppm resize 800 600
+./imtool-soa in.ppm output.ppm resize 800 600
 ```
 
 ## Colaboradores

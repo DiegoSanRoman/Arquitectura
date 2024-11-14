@@ -52,11 +52,11 @@ compare_files() {
 # Test para deer-small con un maxlevel de 255
 echo "TEST - deer-small con maxvalue = 255"
 expected="exp-out-maxlevel/deer-small-255.ppm"
-input="../input/deer-small.ppm"
+input="../in/deer-small.ppm"
 output="act-out-maxlevel/deer-small-255-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
+mkdir -p "$(dirname "in")"
 mkdir -p "$(dirname "$output")"
 
 if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
@@ -100,7 +100,7 @@ rm "$temp_file1" "$temp_file2"
 # Test para deer-small con un maxlevel de 65535
 echo "TEST - deer-small con maxvalue = 65535"
 expected="exp-out-maxlevel/deer-small-65535.ppm"
-input="../input/deer-small.ppm"
+input="../in/deer-small.ppm"
 output="act-out-maxlevel/deer-small-65535-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"
@@ -148,7 +148,7 @@ rm "$temp_file1" "$temp_file2"
 # Test para deer-small con un maxlevel de 100
 echo "TEST - deer-small con maxvalue = 100"
 expected="exp-out-maxlevel/deer-small-100.ppm"
-input="../input/deer-small.ppm"
+input="../in/deer-small.ppm"
 output="act-out-maxlevel/deer-small-100-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"
@@ -196,7 +196,7 @@ rm "$temp_file1" "$temp_file2"
 # Test para deer-small con un maxlevel de 1000
 echo "TEST - deer-small con maxvalue = 1000"
 expected="exp-out-maxlevel/deer-small-1000.ppm"
-input="../input/deer-small.ppm"
+input="../in/deer-small.ppm"
 output="act-out-maxlevel/deer-small-1000-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"
@@ -244,7 +244,7 @@ rm "$temp_file1" "$temp_file2"
 # Test para lake-small con un maxlevel de 255
 echo "TEST - lake-small con maxvalue = 255"
 expected="exp-out-maxlevel/lake-small-255.ppm"
-input="../input/lake-small.ppm"
+input="../in/lake-small.ppm"
 output="act-out-maxlevel/lake-small-255-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"
@@ -292,7 +292,7 @@ rm "$temp_file1" "$temp_file2"
 # Test para lake-small con un maxlevel de 65535
 echo "TEST - lake-small con maxvalue = 65535"
 expected="exp-out-maxlevel/lake-small-65535.ppm"
-input="../input/lake-small.ppm"
+input="../in/lake-small.ppm"
 output="act-out-maxlevel/lake-small-65535-aos.ppm"
 
 mkdir -p "$(dirname "$expected")"

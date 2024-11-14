@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test de la función resize con la imagen lake-small.ppm y dimensiones 1000x1000
-input="../input/lake-small.ppm"
+in="../input/lake-small.ppm"
 output="../output/lake-small-1000.ppm"
 expected="../solutions/resize2/lake-small-1000.ppm"
 comparison_image="../difference.png"
