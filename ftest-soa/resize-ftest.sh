@@ -12,7 +12,7 @@ mkdir -p "$(dirname "$output")"
 #mkdir -p "$(dirname "$comparison_image")"
 
 # Ejecutar la función de resize
-../build/imtool-aos/imtool-aos "$in" "$output" resize 1000 1000
+../build/imtool-soa/imtool-soa "$in" "$output" resize 1000 1000
 
 # Comparar la salida generada con la esperada
 compare "$output" "$expected" "$comparison_image"
