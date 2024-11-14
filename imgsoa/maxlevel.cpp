@@ -72,7 +72,7 @@ namespace {
 
   void processPixelComponent(std::vector<uint8_t>& outputChannel, const std::vector<uint8_t>& inputChannel, const ScaleParams& params, std::size_t index) {
     const unsigned int value = params.maxValue > MAX_COLOR_8BIT ? read16BitValue(inputChannel, index) : read8BitValue(inputChannel, index);
-    const unsigned int scaledValue = scaleAndClampValue({value, params.scaleFactor, params.maxValue});
+    const unsigned int scaledValue = scaleAndClampValue({.value=value, .scaleFactor=params.scaleFactor, .maxValue=params.maxValue});
     if (params.maxValue > MAX_COLOR_8BIT) {
       write16BitValue(scaledValue, outputChannel, index);
     } else {
@@ -82,9 +82,9 @@ namespace {
 
   void processPixelData(const PPMImageSoA& inputImage, PPMImageSoA& outputImage, const PixelProcessingParams& params) {
     for (std::size_t i = 0; i < params.totalComponents; i += params.inputIs16Bit ? 2 : 1) {
-      processPixelComponent(outputImage.redChannel, inputImage.redChannel, {inputImage.redChannel[i], params.scaleFactor, static_cast<unsigned int>(params.newMaxValue)}, i);
-      processPixelComponent(outputImage.greenChannel, inputImage.greenChannel, {inputImage.greenChannel[i], params.scaleFactor, static_cast<unsigned int>(params.newMaxValue)}, i);
-      processPixelComponent(outputImage.blueChannel, inputImage.blueChannel, {inputImage.blueChannel[i], params.scaleFactor, static_cast<unsigned int>(params.newMaxValue)}, i);
+      processPixelComponent(outputImage.redChannel, inputImage.redChannel, {.value=inputImage.redChannel[i], .scaleFactor=params.scaleFactor, .maxValue=static_cast<unsigned int>(params.newMaxValue)}, i);
+      processPixelComponent(outputImage.greenChannel, inputImage.greenChannel, {.value=inputImage.greenChannel[i], .scaleFactor=params.scaleFactor, .maxValue=static_cast<unsigned int>(params.newMaxValue)}, i);
+      processPixelComponent(outputImage.blueChannel, inputImage.blueChannel, {.value=inputImage.blueChannel[i], .scaleFactor=params.scaleFactor, .maxValue=static_cast<unsigned int>(params.newMaxValue)}, i);
     }
   }
 }
