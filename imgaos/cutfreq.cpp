@@ -15,7 +15,6 @@ namespace {
 // Esta función recorre la imagen y cuenta cuántas veces aparece cada color
 // Almacena la frecuencia de cada color en un mapa de colores
 std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImage& image) {
-    std::cout << "Calculando la frecuencia de los colores...\n";
     std::unordered_map<uint32_t, int> colorFrequency;
 
     // Iteramos sobre cada píxel de la imagen 'i' aumenta de tres en tres porque cada píxel tiene tres valores (RGB)
@@ -36,7 +35,6 @@ std::unordered_map<uint32_t, int> calcularFrecuenciaColores(const PPMImage& imag
 
 // Esta función toma el mapa de frecuencias de color y selecciona los 'n' colores menos frecuentes
 std::vector<uint32_t> obtenerColoresMenosFrecuentes(const std::unordered_map<uint32_t, int>& colorFrequency, int n) {
-    std::cout << "Obteniendo los colores menos frecuentes...\n";
     // Convierte el mapa de frecuencias en una lista para poder ordenar los colores
     std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
 
@@ -194,7 +192,6 @@ std::unordered_map<uint32_t, uint32_t> encontrarColoresReemplazo(
 
 // Reemplaza en la imagen cada color que se encuentra en el mapa de reemplazos
 void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint32_t>& replacementMap) {
-    std::cout << "Reemplazando colores...\n";
     for (std::size_t i = 0; i < image.pixelData.size(); i += 3) {
         // Convierte los componentes RGB en un único valor de color
         const uint32_t color = (static_cast<uint32_t>(image.pixelData[i]) << SHIFT_RED) |
@@ -217,8 +214,16 @@ void reemplazarColores(PPMImage& image, const std::unordered_map<uint32_t, uint3
 
 // Función principal que calcula la frecuencia de colores y aplica reemplazos en la imagen
 void cutfreq(PPMImage& image, int n) {
-    // Calcula la frecuencia de cada color en la imagen
+    if (n < 0) {
+      throw std::invalid_argument("El número de colores a eliminar debe ser mayor o igual a 0.");
+    }
+    // Calcular la frecuencia de los colores
     auto colorFrequency = calcularFrecuenciaColores(image);
+
+    if (n > static_cast<int>(colorFrequency.size())) {
+      throw std::invalid_argument("El número de colores a eliminar excede el número de colores únicos en la imagen.");
+  }
+
 
     // Obtiene los `n` colores menos frecuentes
     auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);

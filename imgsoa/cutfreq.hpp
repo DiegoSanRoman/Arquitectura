@@ -3,7 +3,6 @@
 #define CUTFREQ_HPP_SOA
 
 #include "../common/binario.hpp"
-#include <limits>
 
 
 const uint32_t SHIFT_RED = 16;

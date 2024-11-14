@@ -80,7 +80,15 @@ namespace {
     }
 
     // Aplicar la operación cutfreq
-    cutfreq(image, number);
+    try {
+      cutfreq(image, number);
+    } catch (const std::invalid_argument& e) {
+      std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
+      return -1;
+    } catch (const std::exception& e) {
+      std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
+      return -1;
+    }
 
     // Escribir la imagen de salida
     if (!escribirImagenPPM(args.getOutputFile(), image)) {

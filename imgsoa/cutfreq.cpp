@@ -129,8 +129,18 @@ void reemplazarColores(PPMImageSoA& image, const std::unordered_map<uint32_t, ui
 void cutfreq(PPMImageSoA& image, int n) {
     // Calculamos la frecuencia de todos los colores en la imagen.
     auto colorFrequency = calcularFrecuenciaColores(image);
+
+    // Si todos los colores son idénticos, no hacemos nada
+    if (colorFrequency.size() == 1) {
+      return; // No hay nada que reemplazar
+    }
     // Obtenemos los colores menos frecuentes que queremos eliminar.
     auto colorsToRemove = obtenerColoresMenosFrecuentes(colorFrequency, n);
+
+    // Si no hay colores a eliminar (n es mayor al número de colores únicos), no hacemos nada
+    if (colorsToRemove.empty()) {
+      return;
+    }
 
     // Creamos una lista de frecuencias para todos los colores.
     std::vector<std::pair<uint32_t, int>> frequencyList(colorFrequency.begin(), colorFrequency.end());
