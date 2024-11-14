@@ -68,7 +68,7 @@ protected:
 TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     EXPECT_THROW(
         performMaxLevelOperation(paths, -1),
@@ -91,7 +91,7 @@ TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
 TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
@@ -124,7 +124,7 @@ TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
 TEST_F(MaxLevelSoATest, ConvertToQuarter8Bit) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(QUARTER_8BIT))
@@ -154,7 +154,7 @@ TEST_F(MaxLevelSoATest, ConvertToQuarter8Bit) {
 TEST_F(MaxLevelSoATest, ConvertTo16BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(MAX_16BIT))
@@ -181,7 +181,7 @@ TEST_F(MaxLevelSoATest, HandleEmptyImage) {
     emptyImage.maxValue = static_cast<int>(MAX_8BIT);
     ASSERT_TRUE(escribirImagenPPMSoA(getInputPath(), emptyImage));
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
@@ -198,7 +198,7 @@ TEST_F(MaxLevelSoATest, HandleEmptyImage) {
 
 // Test de archivo de entrada no existente
 TEST_F(MaxLevelSoATest, ThrowsOnNonexistentInputFile) {
-    const FilePaths paths{"nonexistent.ppm", getOutputPath()};
+    const FilePaths paths{.inputPath="nonexistent.ppm", .outputPath=getOutputPath()};
 
     EXPECT_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT)),
@@ -229,7 +229,7 @@ TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
     setTestImage(img16bit);
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(MAX_8BIT))
@@ -247,7 +247,7 @@ TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
 TEST_F(MaxLevelSoATest, RoundingBehavior) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(ARBITRARY_MAX))
@@ -281,7 +281,7 @@ TEST_F(MaxLevelSoATest, PreserveAspectRatio) {
 
     ASSERT_TRUE(escribirImagenPPMSoA(getInputPath(), rectangularImage));
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
@@ -308,7 +308,7 @@ TEST_F(MaxLevelSoATest, HandleSinglePixelImage) {
     setTestImage(singlePixel);
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
@@ -330,7 +330,7 @@ TEST_F(MaxLevelSoATest, HandleSinglePixelImage) {
 TEST_F(MaxLevelSoATest, ThrowsOnWriteError) {
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), "/nonexistent/dir/output.ppm"};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath="/nonexistent/dir/output.ppm"};
 
     EXPECT_THROW(
         performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT)),
@@ -351,7 +351,7 @@ TEST_F(MaxLevelSoATest, PreserveBlackPixels) {
     setTestImage(blackImage);
     ASSERT_TRUE(writeTestImageToDisk());
 
-    const FilePaths paths{getInputPath(), getOutputPath()};
+    const FilePaths paths{.inputPath=getInputPath(), .outputPath=getOutputPath()};
 
     ASSERT_NO_THROW(
         performMaxLevelOperation(paths, static_cast<int>(MAX_16BIT))
