@@ -118,12 +118,11 @@ namespace {
   }
 }
 
-void performMaxLevelOperation(const std::string& inputFile, const std::string& outputFile, int newMaxValue) {
-
+void performMaxLevelOperation(const ::FilePaths& paths, int newMaxValue) {
   validateMaxValue(newMaxValue);
 
   PPMImageSoA inputImage{};
-  if (!leerImagenPPMSoA(inputFile, inputImage)) {
+  if (!leerImagenPPMSoA(paths.inputFile, inputImage)) {
     throw std::runtime_error("Error al leer la imagen de entrada");
   }
 
@@ -132,7 +131,7 @@ void performMaxLevelOperation(const std::string& inputFile, const std::string& o
   PPMImageSoA outputImage{};
   processPixelData(inputImage, outputImage, params);
 
-  if (!escribirImagenPPMSoA(outputFile, outputImage)) {
+  if (!escribirImagenPPMSoA(paths.outputFile, outputImage)) {
     throw std::runtime_error("Error al escribir la imagen de salida");
   }
 }

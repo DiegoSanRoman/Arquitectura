@@ -33,7 +33,8 @@ namespace {
   void processMaxlevel(ProgramArgs const & args) {
     validateMaxlevelParams(args);
     int const newMaxValue = std::stoi(args.getAdditionalParams()[0]);
-    performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
+    const ::FilePaths paths = {args.getInputFile(), args.getOutputFile()};
+    performMaxLevelOperation(paths, newMaxValue);
   }
 
   // Función para validar parámetros de la operación "resize"

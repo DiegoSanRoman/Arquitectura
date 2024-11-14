@@ -33,7 +33,8 @@ namespace {
   void processMaxlevel(const ProgramArgs& args) {
     validateMaxlevelParams(args);
     const int newMaxValue = std::stoi(args.getAdditionalParams()[0]);
-    performMaxLevelOperation(args.getInputFile(), args.getOutputFile(), newMaxValue);
+    const FilePaths paths = {args.getInputFile(), args.getOutputFile()};
+    performMaxLevelOperation(paths, newMaxValue);
   }
 
   // Función para validar parámetros de la operación "resize"
@@ -60,7 +61,6 @@ namespace {
     const int newHeight = std::stoi(args.getAdditionalParams()[1]);
     performResizeOperation(args.getInputFile(), args.getOutputFile(), newWidth, newHeight);
   }
-
 
   bool validarParametrosCutfreq(const ProgramArgs& args, int& number) {
     if (args.getAdditionalParams().empty()) {
@@ -129,6 +129,7 @@ namespace {
     }
   }
 }
+
 int main(int argc, char* argv[]) {
   try {
     const ProgramArgs args(argc, argv);

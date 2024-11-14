@@ -22,6 +22,11 @@ namespace {
         std::size_t totalComponents;
     };
 
+    struct FilePaths {
+      std::string inputFile;
+      std::string outputFile;
+    };
+
     void validateMaxValue(int newMaxValue) {
         if (newMaxValue <= 0 || newMaxValue > MAX_COLOR_16BIT) {
             throw std::invalid_argument("Nuevo valor máximo fuera de rango válido (1-65535)");
@@ -76,30 +81,20 @@ namespace {
     }
 }
 
-void performMaxLevelOperation(const std::string& inputFile, const std::string& outputFile, int newMaxValue) {
-    try {
-        validateMaxValue(newMaxValue);
+void performMaxLevelOperation(const ::FilePaths& paths, int newMaxValue) {
+  validateMaxValue(newMaxValue);
 
-        PPMImage inputImage{};
-        if (!leerImagenPPM(inputFile, inputImage)) {
-            throw std::runtime_error("Error al leer el archivo de entrada");
-        }
+  PPMImage inputImage{};
+  if (!leerImagenPPM(paths.inputFile, inputImage)) {
+    throw std::runtime_error("Error reading input image");
+  }
 
-        PPMImage outputImage{};
-        outputImage.width = inputImage.width;
-        outputImage.height = inputImage.height;
-        outputImage.maxValue = newMaxValue;
+  const PixelProcessingParams params = calculateProcessingParams(inputImage, newMaxValue);
 
-        const auto params = calculateProcessingParams(inputImage, newMaxValue);
+  PPMImage outputImage{};
+  processPixelData(inputImage, outputImage, params);
 
-        processPixelData(inputImage, outputImage, params);
-
-        if (!escribirImagenPPM(outputFile, outputImage)) {
-            throw std::runtime_error("Error al escribir el archivo de salida");
-        }
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error al procesar la imagen: " << e.what() << "\n";
-        throw;
-    }
+  if (!escribirImagenPPM(paths.outputFile, outputImage)) {
+    throw std::runtime_error("Error writing output image");
+  }
 }
