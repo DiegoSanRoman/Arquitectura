@@ -5,73 +5,95 @@
 #include <stdexcept>
 #include <fstream>  // Para la definición de std::ofstream
 
+// Definición de constantes para evitar el uso de números mágicos
+namespace {
+  constexpr int MAX_PIXEL_VALUE = 255;
+  constexpr int CONST_256 = 256;
+  constexpr int CONST_128 = 128;
+  constexpr int CONST_1000 = 1000;
+  constexpr int CONST_10 = 10;
+  constexpr int CONST_50 = 50;
+}
+
+// Estructura para almacenar las dimensiones de la imagen y el valor máximo del píxel
+struct ImageParams {
+  int width;
+  int height;
+  int maxValue;
+};
+
 // Clase de prueba para la función de reescalado
 class ResizeTest : public ::testing::Test {
 protected:
-    // Función de ayuda para crear una imagen PPM de prueba
-    PPMImage createTestImage(int width, int height, int maxValue, const std::vector<unsigned char>& data) {
-        PPMImage image;
-        image.width = width;
-        image.height = height;
-        image.maxValue = maxValue;
-        image.pixelData = data;
-        return image;
+    // Función de ayuda para crear una imagen PPM de prueba con datos específicos
+    static PPMImage createTestImage(const ImageParams& params, const std::vector<unsigned char>& data) {
+      PPMImage image;
+      image.width = params.width;
+      image.height = params.height;
+      image.maxValue = params.maxValue;
+      image.pixelData = data;
+      return image;
+    }
+    // Función de ayuda para crear una imagen de prueba predeterminada
+    static PPMImage createDefaultTestImage() {
+        return createTestImage({.width=4, .height=4, .maxValue=MAX_PIXEL_VALUE}, {
+            MAX_PIXEL_VALUE, 0, 0,         0, MAX_PIXEL_VALUE, 0,         0, 0, MAX_PIXEL_VALUE,       MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, 0,
+            MAX_PIXEL_VALUE, 0, MAX_PIXEL_VALUE, 0, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, 0, 0, 0,
+            CONST_128, CONST_128, CONST_128,  CONST_128 / 2, CONST_128 / 2, CONST_128 / 2,
+            CONST_128 / 4, CONST_128 / 4, CONST_128 / 4,  CONST_128, CONST_128, CONST_128,
+            0, 0, 0,                MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, CONST_128 , CONST_128, CONST_128,
+            CONST_128 / 4, CONST_128 / 4, CONST_128 / 4
+        });
     }
 
+    [[nodiscard]] bool writeTestImageToDisk() const {
+        return escribirImagenPPM(testInputPath, testImage);
+    }
+
+    [[nodiscard]] const PPMImage& getTestImage() const { return testImage; }
+    void setTestImage(const PPMImage& image) { testImage = image; }
+    [[nodiscard]] const std::string& getInputPath() const { return testInputPath; }
+    [[nodiscard]] const std::string& getOutputPath() const { return testOutputPath; }
+
+  private:
   PPMImage testImage;
   const std::string testInputPath{"test_input.ppm"};
   const std::string testOutputPath{"test_output.ppm"};
-
-  [[nodiscard]] bool writeTestImageToDisk() const {
-    return escribirImagenPPM(testInputPath, testImage);
-  }
-
-  [[nodiscard]] const PPMImage& getTestImage() const { return testImage; }
-  void setTestImage(const PPMImage& image) { testImage = image; }
-  [[nodiscard]] const std::string& getInputPath() const { return testInputPath; }
-  [[nodiscard]] const std::string& getOutputPath() const { return testOutputPath; }
 };
-
-
 
 // TESTS DE VALIDACIÓN DE PARÁMETROS
 TEST_F(ResizeTest, ThrowsOnInvalidResizeValue) {
-  ASSERT_TRUE(writeTestImageToDisk());
+    ASSERT_TRUE(writeTestImageToDisk());
 
-  // Prueba con un valor negativo para el ancho
-  EXPECT_THROW(
-      performResizeOperation(getInputPath(), getOutputPath(), -1, 100),
-      std::invalid_argument
-  );
+    // Prueba con un valor negativo para el ancho
+    EXPECT_THROW(
+        performResizeOperation(getInputPath(), getOutputPath(), -1, 100),
+        std::invalid_argument
+    );
 
-  // Prueba con un valor negativo para el alto
-  EXPECT_THROW(
-      performResizeOperation(getInputPath(), getOutputPath(), 100, -1),
-      std::invalid_argument
-  );
+    // Prueba con un valor negativo para el alto
+    EXPECT_THROW(
+        performResizeOperation(getInputPath(), getOutputPath(), 100, -1),
+        std::invalid_argument
+    );
 
-  // Prueba con un valor cero para el ancho
-  EXPECT_THROW(
-      performResizeOperation(getInputPath(), getOutputPath(), 0, 100),
-      std::invalid_argument
-  );
+    // Prueba con un valor cero para el ancho
+    EXPECT_THROW(
+        performResizeOperation(getInputPath(), getOutputPath(), 0, 100),
+        std::invalid_argument
+    );
 
-  // Prueba con un valor cero para el alto
-  EXPECT_THROW(
-      performResizeOperation(getInputPath(), getOutputPath(), 100, 0),
-      std::invalid_argument
-  );
+    // Prueba con un valor cero para el alto
+    EXPECT_THROW(
+        performResizeOperation(getInputPath(), getOutputPath(), 100, 0),
+        std::invalid_argument
+    );
 }
 
 // TESTS DE CASOS DE BORDE
 // Redimensionar a un solo píxel (1x1)
 TEST_F(ResizeTest, ResizeToSinglePixel) {
-    PPMImage inputImage = createTestImage(4, 4, 255, {
-        255, 0, 0,   0, 255, 0,   0, 0, 255,   255, 255, 0,
-        255, 0, 255, 0, 255, 255, 255, 255, 255, 0, 0, 0,
-        128, 128, 128, 64, 64, 64,  32, 32, 32,  16, 16, 16,
-        0, 0, 0,     255, 255, 255, 127, 127, 127, 63, 63, 63
-    });
+    const PPMImage inputImage = createDefaultTestImage();
     escribirImagenPPM("input_4x4.ppm", inputImage);
 
     performResizeOperation("input_4x4.ppm", "output_1x1.ppm", 1, 1);
@@ -83,14 +105,10 @@ TEST_F(ResizeTest, ResizeToSinglePixel) {
     EXPECT_EQ(outputImage.height, 1);
 }
 
+
 // Redimensionar a la misma dimensión (identidad)
 TEST_F(ResizeTest, ResizeToSameDimensions) {
-    PPMImage inputImage = createTestImage(4, 4, 255, {
-        255, 0, 0,   0, 255, 0,   0, 0, 255,   255, 255, 0,
-        255, 0, 255, 0, 255, 255, 255, 255, 255, 0, 0, 0,
-        128, 128, 128, 64, 64, 64,  32, 32, 32,  16, 16, 16,
-        0, 0, 0,     255, 255, 255, 127, 127, 127, 63, 63, 63
-    });
+    const PPMImage inputImage = createDefaultTestImage();
     escribirImagenPPM("input_4x4.ppm", inputImage);
 
     performResizeOperation("input_4x4.ppm", "output_same.ppm", 4, 4);
@@ -106,8 +124,8 @@ TEST_F(ResizeTest, ResizeToSameDimensions) {
 
 // Redimensionar una imagen de 1x1 a un tamaño mayor
 TEST_F(ResizeTest, ResizeSinglePixelToLarger) {
-    PPMImage inputImage = createTestImage(1, 1, 255, {
-        128, 128, 128  // Un solo píxel gris
+    const PPMImage inputImage = createTestImage({.width=1, .height=1, .maxValue=MAX_PIXEL_VALUE}, {
+        CONST_128, CONST_128, CONST_128  // Un solo píxel gris
     });
     escribirImagenPPM("input_1x1.ppm", inputImage);
 
@@ -148,16 +166,16 @@ TEST_F(ResizeTest, InvalidPPMFormat) {
 // Redimensionar una imagen grande a un tamaño pequeño
 TEST_F(ResizeTest, ResizeLargeImageToSmall) {
     // Crear una imagen grande de 1000x1000 píxeles con colores alternantes
-    std::vector<unsigned char> largeImageData(1000 * 1000 * 3, 0);
+  std::vector<unsigned char> largeImageData(static_cast<long>(CONST_1000 * CONST_1000 * 3), 0);
     for (size_t i = 0; i < largeImageData.size(); i += 3) {
-        largeImageData[i] = (i / 3) % 256;       // Rojo
-        largeImageData[i + 1] = (i / 3 / 256) % 256; // Verde
-        largeImageData[i + 2] = 255 - (i / 3) % 256; // Azul
+      largeImageData[i] = static_cast<unsigned char>((i / 3) % CONST_256);       // Rojo
+      largeImageData[i + 1] = static_cast<unsigned char>((i / 3 / CONST_256) % CONST_256); // Verde
+      largeImageData[i + 2] = static_cast<unsigned char>(MAX_PIXEL_VALUE - ((i / 3) % CONST_256)); // Azul
     }
-    PPMImage largeImage = createTestImage(1000, 1000, 255, largeImageData);
+    const PPMImage largeImage = createTestImage({.width=CONST_1000, .height=CONST_1000, .maxValue=MAX_PIXEL_VALUE}, largeImageData);
     escribirImagenPPM("large_input.ppm", largeImage);
 
-    performResizeOperation("large_input.ppm", "small_output.ppm", 50, 50);
+    performResizeOperation("large_input.ppm", "small_output.ppm", CONST_50, CONST_50);
     PPMImage smallOutputImage;
     ASSERT_TRUE(leerImagenPPM("small_output.ppm", smallOutputImage));
 
@@ -172,11 +190,11 @@ TEST_F(ResizeTest, ResizeLargeImageToSmall) {
 // Redimensionar una imagen pequeña a un tamaño grande
 TEST_F(ResizeTest, ResizeSmallImageToLarge) {
     // Crear una imagen pequeña de 10x10 píxeles con un patrón básico
-    std::vector<unsigned char> smallImageData(10 * 10 * 3, 128); // Píxeles grises
-    PPMImage smallImage = createTestImage(10, 10, 255, smallImageData);
+    const std::vector<unsigned char> smallImageData(static_cast<unsigned long>(CONST_10 * CONST_10 * 3), CONST_128); // Píxeles grises
+    const PPMImage smallImage = createTestImage({.width=CONST_10, .height=CONST_10, .maxValue=255}, smallImageData);
     escribirImagenPPM("small_input.ppm", smallImage);
 
-    performResizeOperation("small_input.ppm", "large_output.ppm", 500, 500);
+    performResizeOperation("small_input.ppm", "large_output.ppm", CONST_1000/2, CONST_1000/2);
     PPMImage largeOutputImage;
     ASSERT_TRUE(leerImagenPPM("large_output.ppm", largeOutputImage));
 
