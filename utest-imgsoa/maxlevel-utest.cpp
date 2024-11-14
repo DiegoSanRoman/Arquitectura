@@ -1,3 +1,4 @@
+// utest-imgsoa/maxlevel-utest.cpp
 #include <gtest/gtest.h>
 #include "../imgsoa/maxlevel.hpp"
 #include "../common/binario.hpp"
@@ -18,7 +19,6 @@ constexpr unsigned int TEST_WIDTH = 2U;
 constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
-constexpr unsigned int THIRD_16BIT = 21845U;
 constexpr unsigned int TEST_WIDTH_RECTANGULAR = 4;
 constexpr unsigned int TEST_HEIGHT_RECTANGULAR = 2;
 
@@ -68,18 +68,20 @@ protected:
 TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), -1),
+        performMaxLevelOperation(paths, -1),
         std::invalid_argument
     );
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), 0),
+        performMaxLevelOperation(paths, 0),
         std::invalid_argument
     );
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT) + 1),
+        performMaxLevelOperation(paths, static_cast<int>(MAX_16BIT) + 1),
         std::invalid_argument
     );
 }
@@ -89,8 +91,10 @@ TEST_F(MaxLevelSoATest, ThrowsOnInvalidMaxValue) {
 TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
     );
 
     PPMImageSoA result;
@@ -120,8 +124,10 @@ TEST_F(MaxLevelSoATest, ConvertTo8BitMax) {
 TEST_F(MaxLevelSoATest, ConvertToQuarter8Bit) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(QUARTER_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(QUARTER_8BIT))
     );
 
     PPMImageSoA result;
@@ -148,8 +154,10 @@ TEST_F(MaxLevelSoATest, ConvertToQuarter8Bit) {
 TEST_F(MaxLevelSoATest, ConvertTo16BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT))
+        performMaxLevelOperation(paths, static_cast<int>(MAX_16BIT))
     );
 
     PPMImageSoA result;
@@ -173,8 +181,10 @@ TEST_F(MaxLevelSoATest, HandleEmptyImage) {
     emptyImage.maxValue = static_cast<int>(MAX_8BIT);
     ASSERT_TRUE(escribirImagenPPMSoA(getInputPath(), emptyImage));
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
     );
 
     PPMImageSoA result;
@@ -188,8 +198,10 @@ TEST_F(MaxLevelSoATest, HandleEmptyImage) {
 
 // Test de archivo de entrada no existente
 TEST_F(MaxLevelSoATest, ThrowsOnNonexistentInputFile) {
+    const FilePaths paths{"nonexistent.ppm", getOutputPath()};
+
     EXPECT_THROW(
-        performMaxLevelOperation("nonexistent.ppm", getOutputPath(), static_cast<int>(HALF_8BIT)),
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT)),
         std::runtime_error
     );
 }
@@ -217,8 +229,10 @@ TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
     setTestImage(img16bit);
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(MAX_8BIT))
     );
 
     PPMImageSoA result;
@@ -233,8 +247,10 @@ TEST_F(MaxLevelSoATest, From16BitTo8Bit) {
 TEST_F(MaxLevelSoATest, RoundingBehavior) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(ARBITRARY_MAX))
+        performMaxLevelOperation(paths, static_cast<int>(ARBITRARY_MAX))
     );
 
     PPMImageSoA result;
@@ -265,8 +281,10 @@ TEST_F(MaxLevelSoATest, PreserveAspectRatio) {
 
     ASSERT_TRUE(escribirImagenPPMSoA(getInputPath(), rectangularImage));
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
     );
 
     PPMImageSoA result;
@@ -290,8 +308,10 @@ TEST_F(MaxLevelSoATest, HandleSinglePixelImage) {
     setTestImage(singlePixel);
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT))
     );
 
     PPMImageSoA result;
@@ -310,8 +330,10 @@ TEST_F(MaxLevelSoATest, HandleSinglePixelImage) {
 TEST_F(MaxLevelSoATest, ThrowsOnWriteError) {
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), "/nonexistent/dir/output.ppm"};
+
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), "/nonexistent/dir/output.ppm", static_cast<int>(HALF_8BIT)),
+        performMaxLevelOperation(paths, static_cast<int>(HALF_8BIT)),
         std::runtime_error
     );
 }
@@ -329,8 +351,10 @@ TEST_F(MaxLevelSoATest, PreserveBlackPixels) {
     setTestImage(blackImage);
     ASSERT_TRUE(writeTestImageToDisk());
 
+    const FilePaths paths{getInputPath(), getOutputPath()};
+
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT))
+        performMaxLevelOperation(paths, static_cast<int>(MAX_16BIT))
     );
 
     PPMImageSoA result;

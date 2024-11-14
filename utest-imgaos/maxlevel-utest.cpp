@@ -17,7 +17,6 @@ constexpr unsigned int TEST_WIDTH = 2U;
 constexpr unsigned int TEST_HEIGHT = 2U;
 constexpr unsigned int ARBITRARY_MAX = 100U;
 constexpr unsigned int QUARTER_8BIT = 63U;
-constexpr unsigned int THIRD_16BIT = 21845U;
 constexpr unsigned int BLACK = 12U;
 
 class MaxLevelTest : public ::testing::Test {
@@ -62,17 +61,17 @@ TEST_F(MaxLevelTest, ThrowsOnInvalidMaxValue) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), -1),
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, -1),
         std::invalid_argument
     );
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), 0),
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, 0),
         std::invalid_argument
     );
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT) + 1),
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(MAX_16BIT) + 1),
         std::invalid_argument
     );
 }
@@ -83,7 +82,7 @@ TEST_F(MaxLevelTest, ConvertTo8BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(HALF_8BIT))
     );
 
     PPMImage result;
@@ -109,7 +108,7 @@ TEST_F(MaxLevelTest, ConvertTo16BitMax) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(MAX_16BIT))
     );
 
     PPMImage result;
@@ -131,7 +130,7 @@ TEST_F(MaxLevelTest, HandleEmptyImage) {
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), emptyImage));
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(HALF_8BIT))
     );
 
     PPMImage result;
@@ -145,7 +144,7 @@ TEST_F(MaxLevelTest, HandleEmptyImage) {
 // Asegura el manejo correcto de errores de lectura
 TEST_F(MaxLevelTest, ThrowsOnNonexistentInputFile) {
     EXPECT_THROW(
-        performMaxLevelOperation("nonexistent.ppm", getOutputPath(), static_cast<int>(HALF_8BIT)),
+        performMaxLevelOperation({"nonexistent.ppm", getOutputPath()}, static_cast<int>(HALF_8BIT)),
         std::runtime_error
     );
 }
@@ -168,7 +167,7 @@ TEST_F(MaxLevelTest, From16BitTo8Bit) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(MAX_8BIT))
     );
 
     PPMImage result;
@@ -183,7 +182,7 @@ TEST_F(MaxLevelTest, RoundingBehavior) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(ARBITRARY_MAX))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(ARBITRARY_MAX))
     );
 
     PPMImage result;
@@ -197,7 +196,7 @@ TEST_F(MaxLevelTest, ConvertToQuarter8Bit) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(QUARTER_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(QUARTER_8BIT))
     );
 
     PPMImage result;
@@ -232,7 +231,7 @@ TEST_F(MaxLevelTest, PreserveAspectRatio) {
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), tallImage));
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(HALF_8BIT))
     );
 
     PPMImage result;
@@ -253,7 +252,7 @@ TEST_F(MaxLevelTest, HandleSinglePixelImage) {
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), singlePixel));
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(HALF_8BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(HALF_8BIT))
     );
 
     PPMImage result;
@@ -272,7 +271,7 @@ TEST_F(MaxLevelTest, ThrowsOnWriteError) {
     ASSERT_TRUE(writeTestImageToDisk());
 
     EXPECT_THROW(
-        performMaxLevelOperation(getInputPath(), "/nonexistent/dir/output.ppm", static_cast<int>(HALF_8BIT)),
+        performMaxLevelOperation({getInputPath(), "/nonexistent/dir/output.ppm"}, static_cast<int>(HALF_8BIT)),
         std::runtime_error
     );
 }
@@ -289,7 +288,7 @@ TEST_F(MaxLevelTest, PreserveBlackPixels) {
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), blackImage));
 
     ASSERT_NO_THROW(
-        performMaxLevelOperation(getInputPath(), getOutputPath(), static_cast<int>(MAX_16BIT))
+        performMaxLevelOperation({getInputPath(), getOutputPath()}, static_cast<int>(MAX_16BIT))
     );
 
     PPMImage result;

@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(GSL)
 # Run clang-tidy on the whole source tree
 # Note this will slow down compilation.
 # You may temporarily disable but do not forget to enable again.
-set(CMAKE_CXX_CLANG_TIDY clang-tidy-19;
+set(CMAKE_CXX_CLANG_TIDY clang-tidy;
         --format-style=file;
         --header-filter=.;)
 # All includes relative to source tree root.

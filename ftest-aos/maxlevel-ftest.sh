@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Función para comparar dos bytes hexadecimales con las nuevas reglas
+# Function to compare two hexadecimal bytes with new rules
 compare_bytes() {
   local byte1=$1
   local byte2=$2
@@ -9,7 +9,7 @@ compare_bytes() {
   local val2=$((16#$byte2))
 
   local diff=$((val1 - val2))
-  diff=${diff#-}  # Obtener el valor absoluto de la diferencia
+  diff=${diff#-}  # Get the absolute value of the difference
 
   if ((diff == 0 || diff == 1 || diff == 256 || diff == 257)); then
     return 0
@@ -18,7 +18,7 @@ compare_bytes() {
   fi
 }
 
-# Función para comparar dos archivos PPM
+# Function to compare two PPM files
 compare_files() {
   local file1=$1
   local file2=$2
@@ -48,290 +48,62 @@ compare_files() {
   fi
 }
 
-# --------------------------------------------------------------------------------------------
-# Test para deer-small con un maxlevel de 255
-echo "TEST - deer-small con maxvalue = 255"
-expected="exp-out-maxlevel/deer-small-255.ppm"
-input="../in/deer-small.ppm"
-output="act-out-maxlevel/deer-small-255-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "in")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ];then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 255
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen deer-small.ppm y maxvalue = 255 correcto"
-else
-  echo "Test fallido con imagen deer-small.ppm y maxvalue = 255"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
-
-# --------------------------------------------------------------------------------------------
-# Test para deer-small con un maxlevel de 65535
-echo "TEST - deer-small con maxvalue = 65535"
-expected="exp-out-maxlevel/deer-small-65535.ppm"
-input="../in/deer-small.ppm"
-output="act-out-maxlevel/deer-small-65535-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ]; then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 65535
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen deer-small.ppm y maxvalue = 65535 correcto"
-else
-  echo "Test fallido con imagen deer-small.ppm y maxvalue = 65535"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
-
-# --------------------------------------------------------------------------------------------
-# Test para deer-small con un maxlevel de 100
-echo "TEST - deer-small con maxvalue = 100"
-expected="exp-out-maxlevel/deer-small-100.ppm"
-input="../in/deer-small.ppm"
-output="act-out-maxlevel/deer-small-100-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ]; then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 100
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen deer-small.ppm y maxvalue = 100 correcto"
-else
-  echo "Test fallido con imagen deer-small.ppm y maxvalue = 100"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
-
-# --------------------------------------------------------------------------------------------
-# Test para deer-small con un maxlevel de 1000
-echo "TEST - deer-small con maxvalue = 1000"
-expected="exp-out-maxlevel/deer-small-1000.ppm"
-input="../in/deer-small.ppm"
-output="act-out-maxlevel/deer-small-1000-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ]; then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 1000
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen deer-small.ppm y maxvalue = 1000 correcto"
-else
-  echo "Test fallido con imagen deer-small.ppm y maxvalue = 1000"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
-
-# --------------------------------------------------------------------------------------------
-# Test para lake-small con un maxlevel de 255
-echo "TEST - lake-small con maxvalue = 255"
-expected="exp-out-maxlevel/lake-small-255.ppm"
-input="../in/lake-small.ppm"
-output="act-out-maxlevel/lake-small-255-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ];then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 255
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen lake-small.ppm y maxvalue = 255 correcto"
-else
-  echo "Test fallido con imagen lake-small.ppm y maxvalue = 255"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
-
-# --------------------------------------------------------------------------------------------
-# Test para lake-small con un maxlevel de 65535
-echo "TEST - lake-small con maxvalue = 65535"
-expected="exp-out-maxlevel/lake-small-65535.ppm"
-input="../in/lake-small.ppm"
-output="act-out-maxlevel/lake-small-65535-aos.ppm"
-
-mkdir -p "$(dirname "$expected")"
-mkdir -p "$(dirname "$input")"
-mkdir -p "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
-  echo "Error: ../build/imtool-aos/imtool-aos no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ]; then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-aos/imtool-aos "$input" "$output" maxlevel 65535
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen lake-small.ppm y maxvalue = 65535 correcto"
-else
-  echo "Test fallido con imagen lake-small.ppm y maxvalue = 65535"
-  exit 1
-fi
-
-rm "$temp_file1" "$temp_file2"
+# Function to run a test
+run_test() {
+  local test_name=$1
+  local expected=$2
+  local input=$3
+  local output=$4
+  local maxlevel=$5
+
+  echo "TEST - $test_name con maxvalue = $maxlevel"
+
+  mkdir -p "$(dirname "$expected")"
+  mkdir -p "$(dirname "$input")"
+  mkdir -p "$(dirname "$output")"
+
+  if [ ! -f "../build/imtool-aos/imtool-aos" ]; then
+    echo "Error: ../build/imtool-aos/imtool-aos no existe."
+    exit 1
+  fi
+
+  if [ ! -f "$expected" ]; then
+    echo "Error: $expected no existe."
+    exit 1
+  fi
+
+  if [ ! -f "$input" ]; then
+    echo "Error: $input no existe."
+    exit 1
+  fi
+
+  ../build/imtool-aos/imtool-aos "$input" "$output" maxlevel "$maxlevel"
+
+  if [ ! -f "$output" ]; then
+    echo "Error: $output no se creó."
+    exit 1
+  fi
+
+  temp_file1=$(mktemp)
+  temp_file2=$(mktemp)
+
+  tail -n +2 "$expected" | xxd > "$temp_file1"
+  tail -n +2 "$output" | xxd > "$temp_file2"
+
+  if compare_files "$temp_file1" "$temp_file2"; then
+    echo "Test con imagen $input y maxvalue = $maxlevel correcto"
+  else
+    echo "Test fallido con imagen $input y maxvalue = $maxlevel"
+    exit 1
+  fi
+
+  rm "$temp_file1" "$temp_file2"
+}
+
+# Run tests
+run_test "deer-small" "exp-out-maxlevel/deer-small-255.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-255-aos.ppm" 255
+run_test "deer-small" "exp-out-maxlevel/deer-small-65535.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-65535-aos.ppm" 65535
+run_test "deer-small" "exp-out-maxlevel/deer-small-100.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-100-aos.ppm" 100
+run_test "deer-small" "exp-out-maxlevel/deer-small-1000.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-1000-aos.ppm" 1000
+run_test "lake-small" "exp-out-maxlevel/lake-small-255.ppm" "../in/lake-small.ppm" "act-out-maxlevel/lake-small-255-aos.ppm" 255
+run_test "lake-small" "exp-out-maxlevel/lake-small-65535.ppm" "../in/lake-small.ppm" "act-out-maxlevel/lake-small-65535-aos.ppm" 65535

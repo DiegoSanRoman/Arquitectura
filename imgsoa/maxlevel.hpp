@@ -8,9 +8,10 @@
 /**
  * @brief Estructura que contiene las rutas de los archivos de entrada y salida.
  */
+
 struct FilePaths {
-  std::string inputFile;
-  std::string outputFile;
+  std::string inputPath;
+  std::string outputPath;
 };
 
 /**
