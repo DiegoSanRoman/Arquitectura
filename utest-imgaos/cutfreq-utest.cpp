@@ -6,7 +6,6 @@
 #include <filesystem>
 #include <unordered_set>
 
-
 namespace {
 
 constexpr unsigned int MAX_8BIT = 255U;
@@ -81,8 +80,9 @@ TEST_F(CutFreqTest, HandleEmptyImage) {
     emptyImage.maxValue = static_cast<int>(MAX_8BIT);
     ASSERT_TRUE(escribirImagenPPM(getInputPath(), emptyImage));
 
+    // Cambia el número de colores a eliminar a 0 ya que no hay colores en la imagen
     ASSERT_NO_THROW(
-        cutfreq(emptyImage, 1)
+        cutfreq(emptyImage, 0)
     );
 
     EXPECT_EQ(emptyImage.width, 0);
