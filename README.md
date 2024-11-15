@@ -51,16 +51,7 @@ Se trabajará con dos enfoques de implementación: **Structure of Arrays (SOA)**
 
 ### Compilación
 
-Para compilar el proyecto, asegúrate de tener **CMake** instalado y sigue estos pasos:
-
-```bash
-git clone https://github.com/usuario/proyecto-imagenes.git
-cd proyecto-imagenes
-mkdir build
-cd build
-cmake ..
-make
-```
+Para la compilación del proyecto se ha creado el script build.sh en bash.
 ### Ejecución
 
 La aplicación puede ejecutarse con distintos parámetros según la operación que se quiera realizar. Ejemplo:
@@ -73,15 +64,15 @@ La aplicación puede ejecutarse con distintos parámetros según la operación q
 
 Este proyecto ha sido desarrollado por los siguientes estudiantes:
 
-- **Nombre 1** - NIA 12345678  
-  Responsable de ...
+- **Diego San Román Posada** - NIA 100495878  
+  Responsable de Organización de archivos, código de estructuras (common), función maxlevel y tests unitarios/funcionales de maxlevel
 
-- **Nombre 2** - NIA 87654321  
-  Responsable de ...
+- **Javier Díez Arredondo** - NIA 100495833  
+  Responsable de Configuración de archivos clang, funciones info y compress, tests unitarios/funcionales de compress y common.
 
-- **Nombre 3** - NIA 11223344  
-  Responsable de ...
+- **Alba Tello Marcos** - NIA 100495755  
+  Responsable de Función cutfreq y tests unitarios/funcionales de cutfreq
 
-- **Nombre 4** - NIA 44332211  
-  Responsable de ...
+- **Bárbara García López** - NIA 100495712  
+  Responsable de Función resize, tests unitarios/funcionales de resize e integración final del proyecto
 

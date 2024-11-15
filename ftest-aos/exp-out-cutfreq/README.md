@@ -1,0 +1,1 @@
+En esta carpeta se incluirán los archivos de referencia de lake-large-100K.ppm y lake-large-162K.ppm y se comparan en cutfreq-ftest.sh

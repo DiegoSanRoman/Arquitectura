@@ -1,0 +1,1 @@
+En esta carpeta se incluirán los archivos de referencia de lake-small.ppm y se compara en resize-ftest.sh

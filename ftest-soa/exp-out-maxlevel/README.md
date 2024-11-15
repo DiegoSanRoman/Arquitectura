@@ -1,0 +1,1 @@
+En esta carpeta se incluirán los archivos de referencia de deer-small-level.ppm siendo level 100, 255, 1000 y 65535 y lake-small-level.cppm siendo level 255 y 65535 y se comparan en maxlevel-ftest.sh
