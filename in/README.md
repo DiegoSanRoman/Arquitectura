@@ -1,0 +1,1 @@
+En esta carpeta se meterán las imágenes a ser probadas como inputs de imtool.

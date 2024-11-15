@@ -1,0 +1,1 @@
+En esta carpeta se incluirán los archivos de referencia de deer-small.cppm y lake-small.cppm y se comparan en compress-ftest.sh

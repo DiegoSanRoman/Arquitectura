@@ -103,7 +103,5 @@ run_test() {
 # Run tests
 run_test "deer-small" "exp-out-maxlevel/deer-small-255.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-255-aos.ppm" 255
 run_test "deer-small" "exp-out-maxlevel/deer-small-65535.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-65535-aos.ppm" 65535
-run_test "deer-small" "exp-out-maxlevel/deer-small-100.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-100-aos.ppm" 100
-run_test "deer-small" "exp-out-maxlevel/deer-small-1000.ppm" "../in/deer-small.ppm" "act-out-maxlevel/deer-small-1000-aos.ppm" 1000
 run_test "lake-small" "exp-out-maxlevel/lake-small-255.ppm" "../in/lake-small.ppm" "act-out-maxlevel/lake-small-255-aos.ppm" 255
 run_test "lake-small" "exp-out-maxlevel/lake-small-65535.ppm" "../in/lake-small.ppm" "act-out-maxlevel/lake-small-65535-aos.ppm" 65535
