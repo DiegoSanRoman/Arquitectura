@@ -1,4 +1,5 @@
 #!/bin/sh
+mkdir act-out-cutfreq
 #test con lake_large 100K AOS
 ../build/imtool-aos/imtool-aos ../in/lake-large.ppm act-out-cutfreq/lake-large-100K-aos.ppm cutfreq 100000
 

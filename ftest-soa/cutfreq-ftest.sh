@@ -1,4 +1,5 @@
 #!/bin/sh
+mkdir act-out-cutfreq
 #test con lake_large 100K SOA
 ../build/imtool-soa/imtool-soa ../in/lake-large.ppm act-out-cutfreq/lake-large-100K-soa.ppm cutfreq 100000
 
