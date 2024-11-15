@@ -1,7 +1,7 @@
 #!/bin/sh
 mkdir act-out-compress
 #test con deer_small
-../build/imtool-soa/imtool-soa ../input/deer-small.ppm act-out-compress/deer-compress.cppm compress
+../build/imtool-soa/imtool-soa ../in/deer-small.ppm act-out-compress/deer-compress.cppm compress
 
 #Salida de mi funcion
 deer_out="act-out-compress/deer-compress.cppm"
@@ -16,7 +16,7 @@ else
 fi
 
 #test con lake_small
-../build/imtool-soa/imtool-soa ../input/lake-small.ppm act-out-compress/lake-compress.cppm compress
+../build/imtool-soa/imtool-soa ../in/lake-small.ppm act-out-compress/lake-compress.cppm compress
 
 #Salida de mi funcion
 lake_out="act-out-compress/lake-compress.cppm"
