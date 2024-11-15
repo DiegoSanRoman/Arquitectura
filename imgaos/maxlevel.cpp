@@ -68,7 +68,7 @@ namespace {
 
       outputImage.width = inputImage.width;  // Ensure dimensions are copied
       outputImage.height = inputImage.height;  // Ensure dimensions are copied
-      outputImage.maxValue = params.outputIs16Bit ? MAX_COLOR_16BIT : MAX_COLOR_8BIT;
+      outputImage.maxValue = params.outputIs16Bit ? MAX_COLOR_16BIT : static_cast<int>(params.scaleFactor * inputImage.maxValue);
       outputImage.pixelData.resize(outputTotalBytes);
 
       for (std::size_t i = 0; i < params.totalComponents; ++i) {
@@ -77,7 +77,7 @@ namespace {
         if (params.outputIs16Bit) {
           outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
         } else {
-          outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
+          outputValue = std::min(outputValue, static_cast<unsigned int>(params.scaleFactor * inputImage.maxValue));
         }
         writeColorComponent(outputImage.pixelData, i, outputValue, params.outputIs16Bit);
       }
