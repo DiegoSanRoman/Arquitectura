@@ -3,18 +3,14 @@
 # Test de la función resize con la imagen lake-small.ppm y dimensiones 100x100
 in="../in/lake-small.ppm"
 output="../output/lake-small-100.ppm"
-expected="../solutions/resize2/lake-small-100.ppm"
-comparison_image="../difference.png"
-threshold=5  # Umbral para diferencias tolerables entre valores de color
+expected="exp-out-resize/resize2/lake-small-100.ppm"
+threshold=1  # Umbral para diferencias tolerables entre valores de color
 
 # Crear directorios si no existen
 mkdir -p "$(dirname "$output")"
 
 # Ejecutar la función de resize
 ../build/imtool-soa/imtool-soa "$in" "$output" resize 100 100
-
-# Comparar la salida generada con la esperada (opcionalmente para diferencias visuales)
-compare "$output" "$expected" "$comparison_image"
 
 # Convertir los archivos PPM a hexadecimal (omitiendo la cabecera de cada archivo)
 temp_file1=$(mktemp)
