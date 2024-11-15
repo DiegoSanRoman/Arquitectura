@@ -210,39 +210,3 @@ TEST_F(ResizeTest, ResizeSmallImageToLarge) {
         EXPECT_NEAR(largeOutputImage.pixelData[i + 2], 128, 1);   // Azul
     }
 }
-
-
-
-
-
-
-/*
-// Test 5: Comportamiento con píxeles en el borde de la imagen
-TEST_F(ResizeTest, ResizeWithEdgePixels) {
-    PPMImage inputImage = createTestImage(3, 3, 255, {
-        255, 0, 0,     0, 255, 0,   0, 0, 255,
-        255, 255, 0,   0, 255, 255, 255, 0, 255,
-        128, 128, 128, 64, 64, 64,  32, 32, 32
-    });
-    escribirImagenPPM("input_3x3.ppm", inputImage);
-
-    performResizeOperation("input_3x3.ppm", "output_edge_test.ppm", 5, 5);
-    PPMImage outputImage;
-    ASSERT_TRUE(leerImagenPPM("output_edge_test.ppm", outputImage));
-
-    // Verificar las dimensiones
-    EXPECT_EQ(outputImage.width, 5);
-    EXPECT_EQ(outputImage.height, 5);
-
-    // Verificar que los píxeles en los bordes de la imagen de salida estén interpolados correctamente
-    // (aquí se pueden realizar comparaciones específicas según la lógica de interpolación aplicada)
-    // Ejemplo simple: Verificar que los píxeles de las esquinas sigan representando el color dominante de la esquina original
-    EXPECT_EQ(outputImage.pixelData[0], 255);     // Esquina superior izquierda (rojo)
-    EXPECT_EQ(outputImage.pixelData[1], 0);
-    EXPECT_EQ(outputImage.pixelData[2], 0);
-
-    EXPECT_EQ(outputImage.pixelData[3 * (5 - 1) * 3], 128);  // Esquina inferior izquierda (gris)
-    EXPECT_EQ(outputImage.pixelData[3 * (5 - 1) * 3 + 1], 128);
-    EXPECT_EQ(outputImage.pixelData[3 * (5 - 1) * 3 + 2], 128);
-}
-*/
