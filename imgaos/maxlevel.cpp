@@ -62,22 +62,25 @@ namespace {
         };
     }
 
-    void processPixelData(const PPMImage& inputImage, PPMImage& outputImage, const PixelProcessingParams& params) {
-        const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2 : 1;
-        const std::size_t outputTotalBytes = params.totalComponents * outputBytesPerComponent;
+  void processPixelData(const PPMImage& inputImage, PPMImage& outputImage, const PixelProcessingParams& params) {
+      const std::size_t outputBytesPerComponent = params.outputIs16Bit ? 2 : 1;
+      const std::size_t outputTotalBytes = params.totalComponents * outputBytesPerComponent;
 
-        outputImage.pixelData.resize(outputTotalBytes);
+      outputImage.width = inputImage.width;  // Ensure dimensions are copied
+      outputImage.height = inputImage.height;  // Ensure dimensions are copied
+      outputImage.maxValue = params.outputIs16Bit ? MAX_COLOR_16BIT : MAX_COLOR_8BIT;
+      outputImage.pixelData.resize(outputTotalBytes);
 
-        for (std::size_t i = 0; i < params.totalComponents; ++i) {
-            const unsigned int inputValue = readColorComponent(inputImage.pixelData, i, params.inputIs16Bit);
-            auto outputValue = static_cast<unsigned int>(std::lround(inputValue * params.scaleFactor));
-            if (params.outputIs16Bit) {
-                outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
-            } else {
-                outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
-            }
-            writeColorComponent(outputImage.pixelData, i, outputValue, params.outputIs16Bit);
+      for (std::size_t i = 0; i < params.totalComponents; ++i) {
+        const unsigned int inputValue = readColorComponent(inputImage.pixelData, i, params.inputIs16Bit);
+        auto outputValue = static_cast<unsigned int>(std::lround(inputValue * params.scaleFactor));
+        if (params.outputIs16Bit) {
+          outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_16BIT));
+        } else {
+          outputValue = std::min(outputValue, static_cast<unsigned int>(MAX_COLOR_8BIT));
         }
+        writeColorComponent(outputImage.pixelData, i, outputValue, params.outputIs16Bit);
+      }
     }
 }
 
