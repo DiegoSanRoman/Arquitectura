@@ -2,7 +2,7 @@
 
 # Test de la función resize con la imagen lake-small.ppm y dimensiones 100x100
 in="../in/lake-small.ppm"
-output="../output/lake-small-100.ppm"
+output="act-out-resize/lake-small-100.ppm"
 expected="exp-out-resize/resize2/lake-small-100.ppm"
 threshold=1  # Umbral para diferencias tolerables entre valores de color
 
