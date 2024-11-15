@@ -1,101 +1,30 @@
-#!/bin/bash
+#!/bin/sh
+#test con lake_large 100K SOA
+../build/imtool-soa/imtool-soa ../in/lake-large.ppm act-out-cutfreq/lake-large-100K-soa.ppm cutfreq 100000
 
-# Función para comparar archivos de imagen PPM
-compare_files() {
-  local file1=$1
-  local file2=$2
-  local success=true
+#Salida de mi funcion
+lake_large_out_100K="act-out-cutfreq/lake-large-100K-soa.ppm"
+#Salida de referencia
+res_exp="exp-out-cutfreq/lake-large-100K.ppm"
 
-  while IFS= read -r -u3 line1 && IFS= read -r -u4 line2; do
-    bytes1=($(echo "$line1" | awk '{for(i=2;i<=NF;i++) if ($i ~ /^[0-9a-fA-F]+$/) print $i}'))
-    bytes2=($(echo "$line2" | awk '{for(i=2;i<=NF;i++) if ($i ~ /^[0-9a-fA-F]+$/) print $i}'))
-
-    for i in "${!bytes1[@]}"; do
-      if [ "${bytes1[i]}" != "${bytes2[i]}" ]; then
-        success=false
-        break
-      fi
-    done
-
-    if [ "$success" = false ]; then
-      break
-    fi
-  done 3<"$file1" 4<"$file2"
-
-  if [ "$success" = true ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-# --------------------------------------------------------------------------------------------
-# Test funcional para lake-large con cutfreq de 100000 en SOA
-echo "TEST - lake-large con cutfreq = 100000 (SOA)"
-expected="exp-out-cutfreq/lake-large-100K.ppm"
-input="../in/lake-large.ppm"
-output="act-out-cutfreq/lake-large-100K-soa.ppm"
-
-mkdir -p "$(dirname "$expected")" "$(dirname "$input")" "$(dirname "$output")"
-
-if [ ! -f "../build/imtool-soa/imtool-soa" ]; then
-  echo "Error: ../build/imtool-soa/imtool-soa no existe."
-  exit 1
-fi
-
-if [ ! -f "$expected" ]; then
-  echo "Error: $expected no existe."
-  exit 1
-fi
-
-if [ ! -f "$input" ]; then
-  echo "Error: $input no existe."
-  exit 1
-fi
-
-../build/imtool-soa/imtool-soa "$input" "$output" cutfreq 100000
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-temp_file1=$(mktemp)
-temp_file2=$(mktemp)
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen lake-large.ppm y cutfreq = 100000 correcto (SOA)"
+if cmp "$lake_large_out_100K" "$res_exp"; then
+        echo "Test con imagen a 100000 lake-large.ppm correcto"
 else
-  echo "Test fallido con imagen lake-large.ppm y cutfreq = 100000 (SOA)"
-  exit 1
+        echo "Test fallido con imagen a 100000 lake-large.ppm"
+        exit 1
 fi
 
-rm "$temp_file1" "$temp_file2"
+#test con lake_large 162K SOA
+../build/imtool-soa/imtool-soa ../in/lake-large.ppm act-out-cutfreq/lake-large-162K-soa.ppm cutfreq 162000
 
-# --------------------------------------------------------------------------------------------
-# Test funcional para lake-large con cutfreq de 162000 en SOA
-echo "TEST - lake-large con cutfreq = 162000 (SOA)"
-expected="exp-out-cutfreq/lake-large-162K.ppm"
-output="act-out-cutfreq/lake-large-162K-soa.ppm"
+#Salida de mi funcion
+lake_large_out_162K="act-out-cutfreq/lake-large-162K-soa.ppm"
+#Salida de referencia
+res_exp="exp-out-cutfreq/lake-large-162K.ppm"
 
-../build/imtool-soa/imtool-soa "$input" "$output" cutfreq 162000
-
-if [ ! -f "$output" ]; then
-  echo "Error: $output no se creó."
-  exit 1
-fi
-
-tail -n +2 "$expected" | xxd > "$temp_file1"
-tail -n +2 "$output" | xxd > "$temp_file2"
-
-if compare_files "$temp_file1" "$temp_file2"; then
-  echo "Test con imagen lake-large.ppm y cutfreq = 162000 correcto (SOA)"
+if cmp "$lake_large_out_162K" "$res_exp"; then
+        echo "Test con imagen lake-large.ppm a 162000 correcto"
 else
-  echo "Test fallido con imagen lake-large.ppm y cutfreq = 162000 (SOA)"
-  exit 1
+        echo "Test fallido con imagen a 162000 lake-large.ppm"
+        exit 1
 fi
-
-rm "$temp_file1" "$temp_file2"
